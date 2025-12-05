@@ -1,0 +1,83 @@
+hybrid-book-recommender
+├── LICENSE.txt                <- Project's license (Open-source if one is chosen)
+├── README.md                  <- The top-level README for developers using this project.
+├── .env                       <- Secret environment variables (Gemini API Key, AWS creds)
+├── .gitignore                 <- Files to ignore by Git
+├── dvc.yaml                   <- The Pipeline Conductor
+├── pyproject.toml             <- UV dependency definitions
+├── Dockerfile                 <- Production container definition
+│
+├── .github/
+│   └── workflows/             <- CI/CD (main.yaml)
+│
+├── config/
+│   ├── config.yaml            <- System paths (artifacts/data)
+│   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
+│
+├── 🛡️ Hybrid-book-Recommender.code-workspace <- VS Code workspace configuration
+│
+├── data/
+│   ├── external               <- Data from third party sources.
+│   ├── interim                <- Intermediate data that has been transformed.
+│   ├── processed              <- The final, canonical data sets for modeling.
+│   └── raw                    <- The original, immutable data dump.
+│
+├── models/                    <- Trained and serialized models, model predictions, or model summaries
+│
+├── notebooks/                 <- Jupyter notebooks.
+│
+├── references/                <- Data dictionaries, manuals, and all other explanatory materials.
+│   └── folder_structure.md
+│
+├── reports/                   <- Generated analysis as HTML, PDF, LaTeX, etc.
+│   ├── docs/                  <- Generated documents to be used in reporting
+│   └── figures/               <- Generated graphics and figures to be used in reporting
+│
+└── src/                        <- Source code for use in this project.
+    │
+    ├── __init__.py                 <- Makes src a Python module
+    │
+    ├── data/
+    │   ├── __init__.py
+    │   └── make_dataset.py         <- Scripts to download or generate clean data
+    │
+    ├── features/
+    │   ├── __init__.py
+    │   └── build_features.py       <- Code to create features for modeling
+    │
+    ├── components/                 <- The "Workhorses"
+    │   ├── __init__.py
+    │   ├── data_ingestion.py       <- Downloads & unzips
+    │   ├── data_validation.py      <- Checks schemas
+    │   ├── data_transformation.py  <- Pivot tables & Embeddings
+    │   └── model_trainer.py        <- Trains KNN & Builds VectorDB
+    │
+    ├── config/                     <- Configuration Managers
+    │   ├── __init__.py
+    │   └── configuration.py        <- Reads yaml and returns Entity objects
+    │
+    ├── entity/                     <-  Data Classes only
+    │   ├── __init__.py
+    │   └── config_entity.py        <- Typedefs for config (e.g., DataIngestionConfig)
+    │
+    ├── pipeline/                   <- The "Conductors"
+    │   ├── __init__.py
+    │   ├── stage_01_ingestion.py   <- Calls component.ingest()
+    │   ├── stage_02_validation.py
+    │   └── stage_03_training.py
+    │
+    ├── models/                     <- Architecture Definitions
+    │   ├── __init__.py
+    │   ├── hybrid_recommender.py   <- The class that merges KNN + VectorDB scores
+    │   └── llm_utils.py            <- Wrappers for Gemini/LangChain
+    │
+    ├── utils/                   <- Common tools
+    │   ├── common.py            <- Config readers
+    │   ├── paths.py             <- Define and manage file paths used throughout the project
+    │   ├── mlflow_config.py     <- MLflow configuration across modules
+    │   └── exception.py         <- Custom Error Handling (Reliability)
+    │
+    └── visualization/
+        ├── __init__.py
+        ├── plot_settings.py
+        └── visualize.py         <- Code to create visualizations

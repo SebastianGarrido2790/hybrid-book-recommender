@@ -6,6 +6,7 @@ hybrid-book-recommender
 ├── dvc.yaml                   <- The Pipeline Conductor
 ├── pyproject.toml             <- UV dependency definitions
 ├── Dockerfile                 <- Production container definition
+├── template.py                <- Python script to generate the MLOps directory structure (Configuration, Components, Pipelines) automatically
 │
 ├── .github/
 │   └── workflows/             <- CI/CD (main.yaml)

@@ -45,6 +45,7 @@ list_of_files = [
     f"{source_code}/utils/paths.py",
     f"{source_code}/utils/mlflow_config.py",
     f"{source_code}/utils/exception.py",
+    f"{source_code}/utils/logger.py",
     f"{source_code}/visualization/__init__.py",
     f"{source_code}/visualization/plot_settings.py",
     f"{source_code}/visualization/visualize.py",
@@ -70,4 +71,4 @@ for filepath in list_of_files:
             pass
             logging.info(f"Creating empty file: {filepath}")
     else:
-        logging.info(f"{filename} is already exists")
+        logging.info(f"{filename} already exists")

@@ -24,12 +24,12 @@ The project is strictly governed by four non-functional requirements to ensure p
 * **Reliability:** The system must be robust against data errors. This is achieved through strict schema validation (Pydantic), comprehensive exception handling, and automated unit testing within the pipeline.
 * **Scalability:** The architecture must support growth in data volume and traffic. This is managed by containerizing the application with **Docker** and deploying to **AWS EC2**, allowing the inference engine to run independently of the development environment.
 * **Maintainability:** The codebase adheres to "Clean Code" principles, utilizing a modular structure (separating Configuration, Components, and Pipelines). Configuration is decoupled using `params.yaml`, allowing hyperparameters to be tuned without altering the source code.
-* **Adaptability:** The system is designed for rapid iteration. By implementing **CI/CD (GitHub Actions)** and **MLflow**, the project supports the seamless swapping of LLM providers or algorithm logic without disrupting the core pipeline, facilitating continuous experiment tracking and model evolution.
+*   **Adaptability:** The system is designed for rapid iteration. By implementing **CI/CD (GitHub Actions)** and **MLflow**, the project supports the seamless swapping of LLM providers (e.g., Gemini, Hugging Face models) or algorithm logic without disrupting the core pipeline, facilitating continuous experiment tracking and model evolution.
 
 ## **4. Technology Stack**
 * **Language & Management:** Python 3.12, uv
 * **Orchestration & Versioning:** DVC, Git, MLflow
-* **Machine Learning:** Scikit-Learn, LangChain, Gemini API (LLM)
+* **Machine Learning:** Scikit-Learn, LangChain, Gemini API (LLM), Hugging Face Transformers (Open-Source LLMs)
 * **Deployment:** Docker, AWS (EC2), GitHub Actions
 * **Interface:** Streamlit
 

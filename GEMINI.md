@@ -21,7 +21,7 @@ Please assume all code examples, advice, and configuration relate to this specif
 | **Dependencies** | **`uv`** + `pyproject.toml` | **Strict requirement.** Fast, reproducible dependency management. |
 | **Data Versioning** | **DVC** | To track data lineage and orchestrate pipeline stages (`dvc.yaml`). |
 | **Experiment Tracking** | **MLflow** | To log KNN metrics, Embedding parameters, and manage artifacts. |
-| **GenAI & LLM** | **Gemini API** + **LangChain** | For Zero-Shot Classification and generating Vector Embeddings. |
+| **GenAI & LLM** | **Gemini API** and **Hugging Face** + **LangChain** | For Zero-Shot Classification and generating Vector Embeddings. |
 | **Vector Database** | **ChromaDB** | For storing and retrieving semantic embeddings. |
 | **Deployment** | **Docker** + **AWS EC2** | Containerized Streamlit application exposed via port mapping. |
 | **CI/CD** | **GitHub Actions** | For automated testing, Docker builds, and deployment triggers. |
@@ -41,7 +41,7 @@ All proposed solutions, code, and architectural advice **must prioritize** these
 4.  **Adaptability & Reproducibility:**
     *   **DVC-Centric Configuration:** Parameters must be loaded from `params.yaml` via the DVC API (`dvc.api.params_show()`) to guarantee experiment reproducibility.
     *   **Flexible Overrides:** Ensure developers can override these defaults via command-line arguments (CLI) for rapid local testing without altering the tracked `params.yaml`.
-    *   **Modular Design:** Facilitate swapping LLM providers (Gemini $\leftrightarrow$ OpenAI) or Algorithms (KNN $\leftrightarrow$ SVD) purely through configuration.
+    *   **Modular Design:** Facilitate swapping LLM providers (Gemini and open source Hugging Face $\leftrightarrow$ OpenAI) or Algorithms (KNN $\leftrightarrow$ SVD) purely through configuration.
 
 ## 📝 4. Preferred Response Style
 
@@ -59,7 +59,7 @@ You can expect prompts related to the following specific development tasks:
 
 * Writing **DVC stage definitions** for data ingestion and hybrid transformation.
 * Configuring **MLflow logging** for unsupervised learning metrics (e.g., Silhouette score).
-* Implementing **LangChain wrappers** for Gemini API interactions.
+* Implementing **LangChain wrappers** for Gemini API and Hugging Face interactions.
 * Creating a **`Dockerfile`** that handles `uv` installation and Streamlit execution.
 * Refactoring "Notebook code" into modular `src/components/` classes.
 * Setting up **GitHub Actions** to trigger DVC reproduction on commit.

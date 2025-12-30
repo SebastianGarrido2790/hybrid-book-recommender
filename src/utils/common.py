@@ -6,6 +6,7 @@ import os
 from box.exceptions import BoxValueError
 import yaml
 from src.utils.logger import get_logger
+from src.utils.paths import PROJECT_ROOT
 import json
 import joblib
 from ensure import ensure_annotations
@@ -35,7 +36,9 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
     try:
         with open(path_to_yaml) as yaml_file:
             content = yaml.safe_load(yaml_file)
-            logger.info(f"yaml file: {path_to_yaml} loaded successfully")
+            logger.info(
+                f"yaml file: {path_to_yaml.relative_to(PROJECT_ROOT)} loaded successfully"
+            )
             return ConfigBox(content)
     except BoxValueError:
         raise ValueError("yaml file is empty")
@@ -55,7 +58,7 @@ def create_directories(path_to_directories: list, verbose=True):
     for path in path_to_directories:
         os.makedirs(path, exist_ok=True)
         if verbose:
-            logger.info(f"created directory at: {path}")
+            logger.info(f"created directory at: {path.relative_to(PROJECT_ROOT)}")
 
 
 @ensure_annotations
@@ -65,7 +68,7 @@ def save_json(path: Path, data: dict):
     """
     with open(path, "w") as f:
         json.dump(data, f, indent=4)
-    logger.info(f"json file saved at: {path}")
+    logger.info(f"json file saved at: {path.relative_to(PROJECT_ROOT)}")
 
 
 @ensure_annotations
@@ -75,7 +78,7 @@ def load_json(path: Path) -> ConfigBox:
     """
     with open(path) as f:
         content = json.load(f)
-    logger.info(f"json file loaded successfully from: {path}")
+    logger.info(f"json file loaded successfully from: {path.relative_to(PROJECT_ROOT)}")
     return ConfigBox(content)
 
 
@@ -85,7 +88,7 @@ def save_bin(data: Any, path: Path):
     Saves data as a binary file (pickle) using joblib.
     """
     joblib.dump(value=data, filename=path)
-    logger.info(f"binary file saved at: {path}")
+    logger.info(f"binary file saved at: {path.relative_to(PROJECT_ROOT)}")
 
 
 @ensure_annotations
@@ -94,7 +97,7 @@ def load_bin(path: Path) -> Any:
     Loads data from a binary file.
     """
     data = joblib.load(path)
-    logger.info(f"binary file loaded from: {path}")
+    logger.info(f"binary file loaded from: {path.relative_to(PROJECT_ROOT)}")
     return data
 
 

@@ -7,6 +7,7 @@ hybrid-book-recommender
 ├── pyproject.toml             <- UV dependency definitions.
 ├── Dockerfile                 <- Production container definition.
 ├── template.py                <- Python script to generate the MLOps directory structure (Configuration, Components, Pipelines) automatically.
+├── main.py                    <- Acts as the "Switchboard" for the project.
 │
 ├── .github/
 │   └── workflows/             <- CI/CD (main.yaml).
@@ -37,10 +38,6 @@ hybrid-book-recommender
 └── src/                        <- Source code for use in this project.
     │
     ├── __init__.py                 <- Makes src a Python module.
-    │
-    ├── data/
-    │   ├── __init__.py
-    │   └── make_dataset.py         <- Scripts to download or generate clean data.
     │
     ├── features/
     │   ├── __init__.py

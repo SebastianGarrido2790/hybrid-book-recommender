@@ -56,6 +56,7 @@ list_of_files = [
     "LICENSE.txt",
     ".env",
     ".gitignore",
+    "main.py",
 ]
 
 for filepath in list_of_files:

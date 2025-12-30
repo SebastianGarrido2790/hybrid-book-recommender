@@ -1,3 +1,7 @@
+"""
+This script creates the needed folder structure for a machine learning project.
+"""
+
 import os
 from pathlib import Path
 import logging
@@ -20,8 +24,6 @@ list_of_files = [
     "reports/docs/.gitkeep",
     "reports/figures/.gitkeep",
     f"{source_code}/__init__.py",
-    f"{source_code}/data/__init__.py",
-    f"{source_code}/data/make_dataset.py",
     f"{source_code}/features/__init__.py",
     f"{source_code}/features/build_features.py",
     f"{source_code}/components/__init__.py",

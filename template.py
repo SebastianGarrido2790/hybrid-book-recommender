@@ -24,6 +24,7 @@ list_of_files = [
     "reports/docs/.gitkeep",
     "reports/figures/.gitkeep",
     f"{source_code}/__init__.py",
+    f"{source_code}/constants/__init__.py",
     f"{source_code}/features/__init__.py",
     f"{source_code}/features/build_features.py",
     f"{source_code}/components/__init__.py",

@@ -1,0 +1,20 @@
+stages:
+  data_ingestion:
+    cmd: uv run python -m src.pipeline.stage_01_ingestion
+    deps:
+      - src/pipeline/stage_01_ingestion.py
+      - config/config.yaml
+    outs:
+      - artifacts/data_ingestion/books.csv
+
+  data_transformation:
+    cmd: uv run python -m src.pipeline.stage_02_transformation
+    deps:
+      - src/pipeline/stage_02_transformation.py
+      - artifacts/data_ingestion/books.csv
+    params:
+      - data_transformation.test_size
+      - data_transformation.val_size
+      - data_transformation.min_desc_len
+    outs:
+      - artifacts/data_transformation

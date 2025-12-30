@@ -126,4 +126,4 @@ class ConfigurationManager:
 ```
 
 ### **Next Action**
-We need to update your **`config/config.yaml`** with the actual link to the dataset (or a hosted zip version of it) so the code above can read it.
+We need to update **`config/config.yaml`** with the link to the dataset (or a hosted zip version of it) so the code above can read it.

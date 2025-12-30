@@ -4,6 +4,7 @@ hybrid-book-recommender
 ├── .env                       <- Secret environment variables (Gemini API Key, AWS creds).
 ├── .gitignore                 <- Files to ignore by Git.
 ├── dvc.yaml                   <- The Pipeline Conductor.
+├── params.yaml                <- Hyperparameters (K-neighbors, Chunk size).
 ├── pyproject.toml             <- UV dependency definitions.
 ├── Dockerfile                 <- Production container definition.
 ├── template.py                <- Python script to generate the MLOps directory structure (Configuration, Components, Pipelines) automatically.
@@ -12,9 +13,13 @@ hybrid-book-recommender
 ├── .github/
 │   └── workflows/             <- CI/CD (main.yaml).
 │
+├── artifacts/
+│   └── data_ingestion/
+│       ├── data.zip
+│       └── books.csv  (The extracted file)
+│
 ├── config/
-│   ├── config.yaml            <- System paths (artifacts/data).
-│   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size).
+│   └── config.yaml            <- System paths (artifacts/data).
 │
 ├── 🛡️ Hybrid-book-Recommender.code-workspace <- VS Code workspace configuration.
 │
@@ -52,7 +57,10 @@ hybrid-book-recommender
     │
     ├── config/                     <- Configuration Managers.
     │   ├── __init__.py
-    │   └── configuration.py        <- Reads yaml and returns Entity objects.
+    │   └── configuration.py        <- Loads parameters via dvc.api and returns Entity objects.
+    │
+    ├── constants/                  <- Never-changing values (e.g., file paths).
+    │   └── __init__.py
     │
     ├── entity/                     <- Data Classes only.
     │   ├── __init__.py

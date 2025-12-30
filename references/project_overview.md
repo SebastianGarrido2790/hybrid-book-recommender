@@ -23,7 +23,7 @@ The project is strictly governed by four non-functional requirements to ensure p
 
 * **Reliability:** The system must be robust against data errors. This is achieved through strict schema validation (Pydantic), comprehensive exception handling, and automated unit testing within the pipeline.
 * **Scalability:** The architecture must support growth in data volume and traffic. This is managed by containerizing the application with **Docker** and deploying to **AWS EC2**, allowing the inference engine to run independently of the development environment.
-* **Maintainability:** The codebase adheres to "Clean Code" principles, utilizing a modular structure (separating Configuration, Components, and Pipelines). Configuration is decoupled using `params.yaml`, allowing hyperparameters to be tuned without altering the source code.
+* **Maintainability:** The codebase adheres to "Clean Code" principles, utilizing a modular structure (separating Configuration, Components, and Pipelines). We adopt a **DVC-centric configuration** strategy where parameters are strictly loaded from `params.yaml` via the **DVC API (`dvc.api.params_show()`)**. This ensures that the exact hyperparameters used in every experiment are tracked and reproducible, while allowing for easy tuning without altering source code.
 *   **Adaptability:** The system is designed for rapid iteration. By implementing **CI/CD (GitHub Actions)** and **MLflow**, the project supports the seamless swapping of LLM providers (e.g., Gemini, Hugging Face models) or algorithm logic without disrupting the core pipeline, facilitating continuous experiment tracking and model evolution.
 
 ## **4. Technology Stack**
@@ -179,7 +179,7 @@ src/
 │
 ├── config/                     # Configuration Managers
 │   ├── __init__.py
-│   └── configuration.py        # Reads yaml and returns Entity objects
+│   └── configuration.py        # Loads parameters via dvc.api and returns Entity objects
 │
 ├── entity/                     # Data Classes only
 │   ├── __init__.py

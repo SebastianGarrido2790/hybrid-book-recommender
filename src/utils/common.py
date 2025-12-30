@@ -1,0 +1,107 @@
+"""
+This file contains utility functions for common tasks.
+"""
+
+import os
+from box.exceptions import BoxValueError
+import yaml
+from src.utils.logger import get_logger
+import json
+import joblib
+from ensure import ensure_annotations
+from box import ConfigBox
+from pathlib import Path
+from typing import Any
+
+logger = get_logger(__name__)
+
+
+@ensure_annotations
+def read_yaml(path_to_yaml: Path) -> ConfigBox:
+    """
+    Reads a YAML file and returns a ConfigBox.
+
+    Args:
+        path_to_yaml (Path): Path to the YAML file.
+
+    Returns:
+        ConfigBox: A dictionary-like object that allows dot notation access
+                   (e.g., config.key instead of config['key']).
+
+    Raises:
+        ValueError: If the YAML file is empty.
+        e: If there is a parsing error.
+    """
+    try:
+        with open(path_to_yaml) as yaml_file:
+            content = yaml.safe_load(yaml_file)
+            logger.info(f"yaml file: {path_to_yaml} loaded successfully")
+            return ConfigBox(content)
+    except BoxValueError:
+        raise ValueError("yaml file is empty")
+    except Exception as e:
+        raise e
+
+
+@ensure_annotations
+def create_directories(path_to_directories: list, verbose=True):
+    """
+    Creates a list of directories.
+
+    Args:
+        path_to_directories (list): List of paths to create.
+        verbose (bool, optional): If True, logs the creation. Defaults to True.
+    """
+    for path in path_to_directories:
+        os.makedirs(path, exist_ok=True)
+        if verbose:
+            logger.info(f"created directory at: {path}")
+
+
+@ensure_annotations
+def save_json(path: Path, data: dict):
+    """
+    Saves a dictionary to a JSON file.
+    """
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
+    logger.info(f"json file saved at: {path}")
+
+
+@ensure_annotations
+def load_json(path: Path) -> ConfigBox:
+    """
+    Loads a JSON file and returns a ConfigBox.
+    """
+    with open(path) as f:
+        content = json.load(f)
+    logger.info(f"json file loaded successfully from: {path}")
+    return ConfigBox(content)
+
+
+@ensure_annotations
+def save_bin(data: Any, path: Path):
+    """
+    Saves data as a binary file (pickle) using joblib.
+    """
+    joblib.dump(value=data, filename=path)
+    logger.info(f"binary file saved at: {path}")
+
+
+@ensure_annotations
+def load_bin(path: Path) -> Any:
+    """
+    Loads data from a binary file.
+    """
+    data = joblib.load(path)
+    logger.info(f"binary file loaded from: {path}")
+    return data
+
+
+@ensure_annotations
+def get_size(path: Path) -> str:
+    """
+    Returns the size of a file in KB.
+    """
+    size_in_kb = round(os.path.getsize(path) / 1024)
+    return f"~ {size_in_kb} KB"

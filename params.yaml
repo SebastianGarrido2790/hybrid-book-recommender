@@ -1,0 +1,5 @@
+data_transformation:
+  test_size: 0.30
+  val_size: 0.50     # 0.5 of 30% = 15% of total
+  random_state: 42
+  min_desc_len: 20   # Drop books with descriptions shorter than this

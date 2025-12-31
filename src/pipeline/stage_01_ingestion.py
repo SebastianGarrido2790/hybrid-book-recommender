@@ -1,6 +1,7 @@
 """
-This pipeline orchestrates the Data Ingestion stage.
-It triggers the download and extraction of the raw dataset.
+This module serves as the 'Conductor' for the Data Ingestion Stage of the pipeline.
+It manages the transition from raw data configuration to local availability
+by orchestrating the Data Ingestion component.
 """
 
 from src.config.configuration import ConfigurationManager
@@ -11,13 +12,23 @@ STAGE_NAME = "Data Ingestion Stage"
 
 
 class DataIngestionTrainingPipeline:
+    """
+    Orchestration class for the Data Ingestion pipeline stage.
+
+    Handles configuration loading, component initialization, and the execution
+    of data acquisition steps (downloading and extracting).
+    """
+
     def __init__(self):
         pass
 
     def main(self):
+        """
+        Main execution flow for the Data Ingestion stage.
+        """
         logger = get_logger(__name__, headline=STAGE_NAME)
         try:
-            logger.info(f">>>>>> Stage {STAGE_NAME} started <<<<<<")
+            logger.info(f"🚀 {STAGE_NAME} started 🚀")
 
             # 1. Initialize Configuration
             config = ConfigurationManager()
@@ -30,7 +41,7 @@ class DataIngestionTrainingPipeline:
             data_ingestion.download_file()
             data_ingestion.extract_zip_file()
 
-            logger.info(f">>>>>> Stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+            logger.info(f"✅ {STAGE_NAME} completed ✅")
 
         except Exception as e:
             logger.exception(e)

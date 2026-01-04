@@ -109,3 +109,6 @@ chroma_db/
 # Logs
 logs/
 *.log
+
+# Gemini
+GEMINI.md

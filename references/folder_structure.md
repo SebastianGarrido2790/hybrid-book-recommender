@@ -40,7 +40,7 @@ hybrid-book-recommender
 │   ├── docs/                  <- Generated documents to be used in reporting.
 │   └── figures/               <- Generated graphics and figures to be used in reporting.
 │
-└── src/                        <- Source code for use in this project.
+└── src/                            <- Source code for use in this project.
     │
     ├── __init__.py                 <- Makes src a Python module.
     │
@@ -55,9 +55,9 @@ hybrid-book-recommender
     │   ├── data_transformation.py  <- Pivot tables & Embeddings.
     │   └── model_trainer.py        <- Trains KNN & Builds VectorDB.
     │
-    ├── config/                     <- Configuration Managers.
+    ├── config/                     <- The "Brain".
     │   ├── __init__.py
-    │   └── configuration.py        <- Loads parameters via dvc.api and returns Entity objects.
+    │   └── configuration.py        <- Manages the configuration and returns Entity objects.
     │
     ├── constants/                  <- Never-changing values (e.g., file paths).
     │   └── __init__.py
@@ -66,11 +66,12 @@ hybrid-book-recommender
     │   ├── __init__.py
     │   └── config_entity.py        <- Typedefs for config (e.g., DataIngestionConfig).
     │
-    ├── pipeline/                   <- The "Conductors".
+    ├── pipeline/                       <- The "Conductors".
     │   ├── __init__.py
-    │   ├── stage_01_ingestion.py   <- Calls component.ingest().
-    │   ├── stage_02_validation.py
-    │   └── stage_03_training.py
+    │   ├── stage_01_ingestion.py       <- Calls component.ingest().
+    │   ├── stage_02_transformation.py  <- Calls component.transform().
+    │   ├── stage_03_validation.py      <- Calls component.validate().
+    │   └── stage_04_training.py        <- Calls component.train().
     │
     ├── models/                     <- Architecture Definitions.
     │   ├── __init__.py

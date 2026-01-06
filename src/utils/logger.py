@@ -3,7 +3,7 @@ Centralized logging configuration for the entire project.
 
 Usage:
     from src.utils.logger import get_logger
-    logger = get_logger(__name__, headline="data_ingestion.py")
+    logger = get_logger(__name__, headline="main.py")
     logger.info("Started data download...")
 """
 
@@ -18,7 +18,9 @@ from src.utils.paths import LOGS_DIR
 LOG_FILE = LOGS_DIR / "running_logs.log"
 
 
-def get_logger(name: str = __name__, headline: Optional[str] = None) -> logging.Logger:
+def get_logger(
+    name: Optional[str] = None, headline: Optional[str] = None
+) -> logging.Logger:
     """
     Returns a configured logger with consistent formatting.
     Adds an optional headline section to separate logs per script run.
@@ -29,7 +31,7 @@ def get_logger(name: str = __name__, headline: Optional[str] = None) -> logging.
         - Works safely across multi-module projects
 
     Args:
-        name (str): Logger name, typically __name__.
+        name (Optional[str]): Logger name, typically __name__.
         headline (Optional[str]): Optional headline for visual separation (e.g., script name).
 
     Returns:
@@ -72,3 +74,12 @@ def get_logger(name: str = __name__, headline: Optional[str] = None) -> logging.
                 f.write(headline_text)
 
     return logger
+
+
+def log_spacer():
+    """
+    Appends a raw newline to the log file to provide visual spacing
+    without the log formatter prefix (timestamp/levelname).
+    """
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write("\n")

@@ -9,6 +9,7 @@ from src.components.data_ingestion import DataIngestion
 from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Ingestion Stage"
+logger = get_logger(headline=STAGE_NAME)
 
 
 class DataIngestionTrainingPipeline:
@@ -26,9 +27,8 @@ class DataIngestionTrainingPipeline:
         """
         Main execution flow for the Data Ingestion stage.
         """
-        logger = get_logger(__name__, headline=STAGE_NAME)
         try:
-            logger.info(f"🚀 {STAGE_NAME} started 🚀")
+            logger.info("🚀 Starting Ingestion Pipeline 🚀")
 
             # 1. Initialize Configuration
             config = ConfigurationManager()
@@ -41,7 +41,7 @@ class DataIngestionTrainingPipeline:
             data_ingestion.download_file()
             data_ingestion.extract_zip_file()
 
-            logger.info(f"✅ {STAGE_NAME} completed ✅")
+            logger.info("✅ Completed Ingestion Pipeline ✅")
 
         except Exception as e:
             logger.exception(e)

@@ -41,7 +41,7 @@ class DataIngestionTrainingPipeline:
             data_ingestion.download_file()
             data_ingestion.extract_zip_file()
 
-            logger.info("✅ Completed Ingestion Pipeline ✅")
+            logger.info("✅ Ingestion Pipeline Completed ✅")
 
         except Exception as e:
             logger.exception(e)

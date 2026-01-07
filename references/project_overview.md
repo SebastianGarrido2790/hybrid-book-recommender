@@ -35,38 +35,6 @@ The project is strictly governed by four non-functional requirements to ensure p
 
 ---
 
-## **7k Books Dataset** 
-[Link](https://www.kaggle.com/datasets/dylanjcastillo/7k-books-with-metadata)
-
-The dataset provides close to seven thousand books containing identifiers, title, subtitle, authors, categories, thumbnail url, description, published year, average rating, and number of ratings. The dataset is provided as comma-delimited CSV.
-
-### **Suitability for LLM Applications**
-The design calls for **Vector Embeddings**, **Sentiment Analysis**, and **Zero-Shot Classification**.
-
-| Feature | **7k-books-with-metadata** ||
-| :--- | :--- | :--- |
-| **Data Source** | `description` column (Rich text) 
-| **Vector Search** | ✅ **Possible.** We can embed the full synopsis to find semantic similarities (e.g., "books about overcoming grief").
-| **Sentiment Analysis** | ✅ **High Quality.** An LLM can easily analyze the tone of a paragraph-long description. 
-| **Classification** | ✅ **Accurate.** LLMs can read the description and zero-shot classify it into "Fiction/Non-fiction".
-
-### **Suitability for MLOps & Clean Code**
-The idea is a "clean, simple, and well-documented" project.
-
-* **Data Hygiene:** `7k-books` is a modern, UTF-8 encoded CSV. Unlike old datasets, which uses `latin-1` encoding, has "bad lines" (semicolon delimiters inside text fields), and mixed data types (Integers mixed with Strings in the Year column).
-* **Pipeline Stability:** Using dirty data often causes `Data Validation` pipelines (Pydantic/Great Expectations) to fail constantly, forcing you to spend 80% of the time cleaning data rather than building models.
-* **Speed:** 7,000 rows is the "Goldilocks" size for a portfolio project. It is large enough to be interesting but small enough that **Docker builds**, **CI/CD tests**, and **LLM embedding generation** will run in minutes, not days.
-
-### **The Hybrid "Collaborative" Challenge**
-There is one trade-off. The `7k-books` dataset usually comes as metadata only. To build the **Collaborative Filtering** (User-User) component, user ratings are needed.
-
-**The Solution for the Project:**
-Since we are combining systems, we have two options:
-1.  **Find the accompanying ratings:** This dataset is often a subset of larger crawls. we can look for a "ratings" file that matches these ISBNs.
-2.  **Synthetic/Implicit Data (Recommended for Portfolios):** Since our goal is to *master the architecture*, we can simulate the interaction matrix for the 7k books, OR simply use the `ratings_count` and `average_rating` columns included in `7k-books` to build a "Popularity-Based" filter as a proxy for the traditional component until we merge a user-ratings file.
-
----
-
 ## **Project Plan**
 
 This is a high-level strategic plan. We are adopting a **"Platform Engineering"** mindset—building not just a model, but a reproducible factory for models.
@@ -103,31 +71,42 @@ We will not build linearly. We will iterate through cycles, moving from "Lab" (N
   * **Content-Based:** Build a Vector Index (ChromaDB). This acts as our "Semantic Search Engine."
   * **Tracking:** We will use **MLflow** here to log parameters (e.g., `n_neighbors`, `embedding_model`) and metrics to ensure we aren't degrading performance as we iterate.
 
-#### **The Hybrid Pipeline Stages**
+### **The Hybrid Pipeline Stages**
 
 We will automate these stages using `dvc repro`.
 
-#### Stage 00: Ingestion
+We have refactored the pipeline to adhere to the **Single Responsibility Principle**. Each stage does one thing well, making debugging trivial.
 
-  * **Goal:** Fetch data from Kaggle/GitHub.
-  * **Action:** Write a script that checks if data exists; if not, downloads and unzips it.
-  * **MLOps:** DVC tracks the `.csv` hash. If the source data changes, DVC invalidates downstream stages.
+#### **Stage 01: Ingestion (`stage_01_ingestion.py`)**
+* **Goal:** Fetch data from the source (Kaggle/GitHub).
+* **Action:** Downloads and extracts the raw `.zip` file.
+* **MLOps:** DVC tracks the `.csv` hash. If the source URL changes, DVC invalidates downstream stages.
 
-#### Stage 01: Validation & Cleaning
+#### **Stage 02: Validation & Cleaning (`stage_02_validation.py`)**
+* **Goal:** Ensure data integrity and hygiene.
+* **Action:**
+    * Reads raw data.
+    * **Cleans:** Filters out books with missing descriptions or formatting errors (e.g., list-as-string artifacts).
+    * **Validates:** Checks if the dataset is empty after cleaning.
+    * **Artifacts:** Generates `clean_books.csv` and `status.txt`.
+* **Why Split?** By separating cleaning from splitting, we create a high-quality "Golden Dataset" that can be used for both Training and Inference.
 
-  * **Goal:** Ensure data schema integrity.
-  * **Reliability:** Use Pydantic models (in `src/entity`) to validate incoming data types.
-  * **Logic:** Filter out users with \< 50 ratings (to reduce noise for the KNN) and books with no descriptions (useless for LLM).
+#### **Stage 03: Transformation (`stage_03_transformation.py`)**
+* **Goal:** Prepare data for modeling (Feature Engineering).
+* **Action:**
+    * Reads `clean_books.csv`.
+    * Performs a **3-Way Deterministic Split** (Train/Validation/Test) based on the `random_state` in `params.yaml`.
+* **Artifacts:** `train.csv`, `val.csv`, `test.csv`.
 
-#### Stage 02: Hybrid Transformation (The Complex Part)
+#### **Stage 04: Model Training (`stage_04_model_trainer.py`)**
+* **Goal:** Train the engines.
+* **Track A (Traditional):** Fit `NearestNeighbors` on interaction data.
+* **Track B (GenAI):**
+    * Connects to **Gemini API**.
+    * Generates **Vector Embeddings** for book descriptions (Title + Author + Description).
+    * Indexes embeddings into **ChromaDB**.
+* **Tracking:** Logs parameters (embedding model name, chunk size) to **MLflow**.
 
-We branch the logic here:
-
-1.  **For KNN:** Pivot `User-ID`, `ISBN`, `Rating` into a matrix.
-2.  **For LLM:**
-      * **Text Cleaning:** Remove HTML tags/artifacts.
-      * **Feature Augmentation:** Use `LangChain` + `Gemini` to generate a "Sentiment" tag for each book description (e.g., "Melancholic", "Uplifting").
-      * **Zero-Shot:** Classify books into standardized genres if the raw data is messy.
 
 #### Stage 03: Model Training & Vector Indexing
 
@@ -170,33 +149,34 @@ To maximize **Maintainability** and **Separation of Concerns** for a DVC pipelin
 ```text
 src/
 ├── __init__.py
-├── components/                 # The "Workhorses"
+├── components/                 # The "Workhorses" (Pure Logic)
 │   ├── __init__.py
 │   ├── data_ingestion.py       # Downloads & unzips
 │   ├── data_validation.py      # Checks schemas
 │   ├── data_transformation.py  # Pivot tables & Embeddings
 │   └── model_trainer.py        # Trains KNN & Builds VectorDB
 │
-├── config/                     # Configuration Managers
+├── config/                     # Configuration Managers (The "Brain")
 │   ├── __init__.py
-│   └── configuration.py        # Loads parameters via dvc.api and returns Entity objects
+│   └── configuration.py        # Loads parameters and returns Entity objects
 │
-├── entity/                     # Data Classes only
+├── entity/                     # Data Classes only (The "Skeleton")
 │   ├── __init__.py
 │   └── config_entity.py        # Typedefs for config (e.g., DataIngestionConfig)
 │
-├── pipeline/                   # The "Conductors"
+├── pipeline/                   # The "Conductors" (Orchestration)
 │   ├── __init__.py
-│   ├── stage_01_ingestion.py   # Calls component.ingest()
-│   ├── stage_02_validation.py
-│   └── stage_03_training.py
+│   ├── stage_01_ingestion.py   # Links Config -> Ingestion Component
+│   ├── stage_02_validation.py  # Links Config -> Validation Component
+│   ├── stage_03_transformation.py  # Links Config -> Transformation Component
+│   └── stage_04_training.py    # Links Config -> Training Component
 │
-├── models/                     # Architecture Definitions
+├── models/                     # Architecture Definitions 
 │   ├── __init__.py
 │   ├── hybrid_recommender.py   # The class that merges KNN + VectorDB scores
 │   └── llm_utils.py            # Wrappers for Gemini/LangChain
 │
-└── utils/                      # Shared Utilities
+└── utils/                      # Shared Utilities 
 ```
 
   * **`components`** contain the logic (functional).

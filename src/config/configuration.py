@@ -3,6 +3,8 @@ This module serves as the 'Brain' of the system, responsible for coordinating
 configurations and parameters across the pipeline.
 """
 
+import dvc.api
+from box import ConfigBox
 from src.constants import *
 from src.utils.common import read_yaml, create_directories
 from src.entity.config_entity import (
@@ -32,7 +34,7 @@ class ConfigurationManager:
             params_filepath (Path): Path to the parameters file (tracked by DVC).
         """
         self.config = read_yaml(config_filepath)
-        self.params = read_yaml(params_filepath)
+        self.params = ConfigBox(dvc.api.params_show())
         create_directories([self.config.artifacts_root])
 
     def get_data_ingestion_config(self) -> DataIngestionConfig:

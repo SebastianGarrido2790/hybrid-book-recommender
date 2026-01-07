@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 class DataTransformation:
     """
     This class implements the 'Transformation' stage of the CRISP-DM lifecycle,
-    ensuring data quality and deterministic data lineage for MLOps tracking.
+    focusing on deterministic data partitioning (Train/Val/Test) for MLOps tracking.
     """
 
     def __init__(self, config: DataTransformationConfig):

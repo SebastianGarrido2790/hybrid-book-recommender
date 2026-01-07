@@ -1,3 +1,8 @@
+"""
+This module serves as the 'Worker' for the Data Ingestion Stage of the pipeline.
+It handles the data ingestion process from a remote source.
+"""
+
 import os
 import urllib.request as request
 import zipfile
@@ -8,10 +13,21 @@ logger = get_logger(__name__)
 
 
 class DataIngestion:
+    """
+    This class is responsible for downloading the dataset from a specified URL
+    and extracting it to a local directory for further processing.
+    """
+
     def __init__(self, config: DataIngestionConfig):
         self.config = config
 
     def download_file(self):
+        """
+        Downloads the file from the source URL.
+
+        Checks if the file already exists locally. If not, it downloads the file
+        and logs the process.
+        """
         if not os.path.exists(self.config.local_data_file):
             filename, headers = request.urlretrieve(
                 url=self.config.source_URL, filename=self.config.local_data_file
@@ -24,9 +40,10 @@ class DataIngestion:
 
     def extract_zip_file(self):
         """
-        zip_file_path: str
-        Extracts the zip file into the data directory
-        Function returns None
+        Extracts the zip file into the configured data directory.
+
+        Creates the extraction directory if it doesn't exist and unzips
+        the downloaded file into it.
         """
         unzip_path = self.config.unzip_dir
         os.makedirs(unzip_path, exist_ok=True)

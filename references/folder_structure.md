@@ -23,12 +23,6 @@ hybrid-book-recommender
 │
 ├── 🛡️ Hybrid-book-Recommender.code-workspace <- VS Code workspace configuration.
 │
-├── data/
-│   ├── external               <- Data from third party sources.
-│   ├── interim                <- Intermediate data that has been transformed.
-│   ├── processed              <- The final, canonical data sets for modeling.
-│   └── raw                    <- The original, immutable data dump.
-│
 ├── models/                    <- Trained and serialized models, model predictions, or model summaries.
 │
 ├── notebooks/                 <- Jupyter notebooks.
@@ -51,13 +45,13 @@ hybrid-book-recommender
     ├── components/                 <- The "Workhorses".
     │   ├── __init__.py
     │   ├── data_ingestion.py       <- Downloads & unzips.
-    │   ├── data_validation.py      <- Checks schemas.
-    │   ├── data_transformation.py  <- Pivot tables & Embeddings.
+    │   ├── data_validation.py      <- Clean & validate.
+    │   ├── data_transformation.py  <- Apply transformations and split data into train/val/test.
     │   └── model_trainer.py        <- Trains KNN & Builds VectorDB.
     │
     ├── config/                     <- The "Brain".
     │   ├── __init__.py
-    │   └── configuration.py        <- Manages the configuration and returns Entity objects.
+    │   └── configuration.py        <- Reads yaml, manages the configuration and returns Entity objects.
     │
     ├── constants/                  <- Never-changing values (e.g., file paths).
     │   └── __init__.py
@@ -69,8 +63,8 @@ hybrid-book-recommender
     ├── pipeline/                       <- The "Conductors".
     │   ├── __init__.py
     │   ├── stage_01_ingestion.py       <- Calls component.ingest().
-    │   ├── stage_02_transformation.py  <- Calls component.transform().
-    │   ├── stage_03_validation.py      <- Calls component.validate().
+    │   ├── stage_02_validation.py      <- Calls component.validate().
+    │   ├── stage_03_transformation.py  <- Calls component.transform().
     │   └── stage_04_training.py        <- Calls component.train().
     │
     ├── models/                     <- Architecture Definitions.

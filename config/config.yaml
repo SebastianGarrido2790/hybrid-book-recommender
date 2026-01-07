@@ -1,13 +1,21 @@
+# Stores system paths (ONLY immutable structure).
+
 artifacts_root: artifacts
 
 data_ingestion:
   root_dir: artifacts/data_ingestion
   # We will use a public mirror for the automation example.
   # If you have the file locally, you can put "local" here and logic in the component.
-  source_URL: https://github.com/SebastianGarrido2790/Data-Science-Portfolio/raw/refs/heads/main/books.csv.zip 
+  source_URL: https://github.com/SebastianGarrido2790/Data-Science-Portfolio/raw/refs/heads/main/books.csv.zip
   local_data_file: artifacts/data_ingestion/data.zip
   unzip_dir: artifacts/data_ingestion
 
+data_validation:
+  root_dir: artifacts/data_validation
+  unzip_data_dir: artifacts/data_ingestion/books.csv
+  STATUS_FILE: artifacts/data_validation/status.txt
+  cleaned_data_file: artifacts/data_validation/clean_books.csv
+
 data_transformation:
   root_dir: artifacts/data_transformation
-  data_path: artifacts/data_ingestion/books.csv
+  data_path: artifacts/data_validation/clean_books.csv

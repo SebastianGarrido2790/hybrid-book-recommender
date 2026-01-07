@@ -40,7 +40,7 @@ class DataTransformationTrainingPipeline:
             # 3. Run Logic
             data_transformation.initiate_data_transformation()
 
-            logger.info("✅ Completed Data Transformation Pipeline ✅")
+            logger.info("✅ Data Transformation Pipeline Completed ✅")
 
         except Exception as e:
             logger.exception(e)

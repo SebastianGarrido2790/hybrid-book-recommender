@@ -1,7 +1,6 @@
 """
-This module handles the data transformation logic for the Hybrid Book Recommender project.
-It performs data cleaning (filtering descriptions, formatting authors/categories, removing duplicates)
-and orchestrates the train-test-validation split for model development and evaluation.
+This module serves as the 'Worker' for the Data Transformation Stage of the pipeline.
+It handles the train-test-validation split for model development and evaluation.
 """
 
 import os
@@ -15,8 +14,6 @@ logger = get_logger(__name__)
 
 class DataTransformation:
     """
-    Component for cleaning raw book data and splitting it into production-ready datasets.
-
     This class implements the 'Transformation' stage of the CRISP-DM lifecycle,
     ensuring data quality and deterministic data lineage for MLOps tracking.
     """
@@ -24,67 +21,26 @@ class DataTransformation:
     def __init__(self, config: DataTransformationConfig):
         self.config = config
 
-    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Processes the input DataFrame to ensure data quality before model training.
-
-        Performs the following:
-        - Drops records with missing descriptions.
-        - Filters out descriptions shorter than the configured threshold.
-        - Sanitizes 'categories' and 'authors' columns (removes bracket notation).
-        - Removes duplicate records based on ISBN13.
-
-        Args:
-            df (pd.DataFrame): Raw ingested data.
-
-        Returns:
-            pd.DataFrame: Cleaned and filtered book data.
-        """
-        logger.info(f"Initial Shape: {df.shape}")
-
-        # Use param from yaml for filtering
-        df = df.dropna(subset=["description"])
-
-        # New robust check using params.yaml
-        if "description" in df.columns:
-            df = df[df["description"].str.len() > self.config.min_desc_len]
-
-        if "categories" in df.columns:
-            df["categories"] = (
-                df["categories"].astype(str).str.replace(r"[\[\]']", "", regex=True)
-            )
-            df = df[df["categories"].str.len() > 2]
-
-        if "authors" in df.columns:
-            df["authors"] = (
-                df["authors"].astype(str).str.replace(r"[\[\]']", "", regex=True)
-            )
-
-        df = df.drop_duplicates(subset=["isbn13"])
-
-        logger.info(f"Final Cleaned Shape: {df.shape}")
-        return df
-
     def initiate_data_transformation(self):
         """
         Orchestrates the full transformation pipeline.
 
-        Reads the ingested CSV, applies cleaning logic, performs a 3-way split
-        (Train/Val/Test), and saves the resulting artifacts to the root directory.
+        Reads the ingested CSV and cleaned data, performs a 3-way split
+        (Train/Val/Test), and saves the resulting artifacts (train.csv, val.csv, test.csv)
+        to the root directory.
 
         Raises:
             Exception: If any error occurs during the transformation process.
         """
         try:
+            # NOTE: We read the CLEAN data, not the raw data
             data_path = self.config.data_path
             df = pd.read_csv(data_path)
-            logger.info(f"Loaded data from {data_path}")
+            logger.info(f"Loaded CLEAN data from {data_path} with shape {df.shape}")
 
-            df_cleaned = self.clean_data(df)
-
-            # --- MLOps Strategy: 3-Way Split using params.yaml ---
+            # Perform 3-Way Split
             train_df, temp_df = train_test_split(
-                df_cleaned,
+                df,
                 test_size=self.config.test_size,
                 random_state=self.config.random_state,
             )

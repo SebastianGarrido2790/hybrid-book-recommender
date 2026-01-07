@@ -7,14 +7,25 @@ stages:
     outs:
       - artifacts/data_ingestion/books.csv
 
-  data_transformation:
-    cmd: uv run python -m src.pipeline.stage_02_transformation
+  data_validation:
+    cmd: uv run python -m src.pipeline.stage_02_validation
     deps:
-      - src/pipeline/stage_02_transformation.py
+      - src/pipeline/stage_02_validation.py
       - artifacts/data_ingestion/books.csv
+    params:
+      - data_validation.min_desc_len
+      - data_validation.categories_min_len
+    outs:
+      - artifacts/data_validation/clean_books.csv
+
+  data_transformation:
+    cmd: uv run python -m src.pipeline.stage_03_transformation
+    deps:
+      - src/pipeline/stage_03_transformation.py
+      - artifacts/data_validation/clean_books.csv
     params:
       - data_transformation.test_size
       - data_transformation.val_size
-      - data_transformation.min_desc_len
+      - data_transformation.random_state
     outs:
       - artifacts/data_transformation

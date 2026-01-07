@@ -1,7 +1,7 @@
 """
 This module serves as the 'Conductor' for the Data Ingestion Stage of the pipeline.
 It manages the transition from raw data configuration to local availability
-by orchestrating the Data Ingestion component.
+by orchestrating the DataIngestion component.
 """
 
 from src.config.configuration import ConfigurationManager

@@ -32,13 +32,13 @@ Since we are combining systems, we have two options:
 
 ### **Recommendation for the Hybrid Transformation**
 
-Based on our current progress and the specific constraints of the 7k-books dataset, here is the status check and strategic recommendation.
+Based on our current progress of the pipeline(`src\pipeline\stage_03_transformation.py`) and the specific constraints of the 7k-books dataset, here is the status check and strategic recommendation.
 
 ---
 
 #### **1. Status Check: Have we done this?**
 
-**No**, we have not done the "Complex" version you described. We have only done the **Basic Cleaning**.
+**No**, we have not done a more "Complex" cleaning of the text. We have only done the **Basic Cleaning**.
 
 | Task | Status | Where it lives now |
 | --- | --- | --- |
@@ -84,3 +84,9 @@ We have effectively streamlined the "Complex Transformation" out of the critical
 3. **Stage 03:** Splitting (Done - ensures we can test).
 4. **Stage 04 (Next):** **Model Training (Embeddings)**.
 * Instead of "Augmenting" text, we simply **Embed** the cleaned text. This gives us 80% of the value with 20% of the effort.
+
+---
+
+#### **Next Step:** 
+
+We should move directly to **Stage 04: Model Training (The Factory)** to build the Vector Database. This is where the "LLM Magic" actually happens.

@@ -23,7 +23,7 @@ These lines assemble the toolkit needed to talk to AI models and databases.
 
 ### **B. The "Switchboard" (Lines 31–55)**
 
-This method, `get_embedding_function`, uses the **Factory Pattern**. It decides *which* brain to use based entirely on your `config.yaml`.
+This method, `get_embedding_function`, uses the **Factory Pattern**. It decides *which* brain to use based entirely on your `params.yaml` (`embedding_provider` and `model_name`).
 
 * **Lines 44-53 (The Gemini Logic):**
 ```python

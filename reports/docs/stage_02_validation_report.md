@@ -11,15 +11,15 @@ The validation stage is decoupled from ingestion and transformation, allowing fo
 ### **The Data Flow**
 ```mermaid
 graph TD
-    A[artifacts/data_ingestion/books.csv] -->|Input| B(DataValidation Component)
-    C[config/config.yaml] -->|Paths| D(ConfigurationManager)
-    E[params.yaml] -->|Thresholds| D
+    A["artifacts/data_ingestion/books.csv"] -->|Input| B(DataValidation Component)
+    C["config/config.yaml"] -->|Paths| D(ConfigurationManager)
+    E["params.yaml"] -->|Thresholds| D
     D -->|Creates| F[DataValidationConfig]
     F -->|Injected into| B
-    B -->|Generates| G[clean_books.csv]
-    B -->|Generates| H[status.txt]
-    J[Pipeline Script] -->|Orchestrates| B
-    K[main.py] -->|Calls| J
+    B -->|Generates| G["clean_books.csv"]
+    B -->|Generates| H["status.txt"]
+    J["Pipeline Script"] -->|Orchestrates| B
+    K["main.py"] -->|Calls| J
 ```
 
 ### **Component Interaction**

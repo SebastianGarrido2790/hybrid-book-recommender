@@ -67,3 +67,25 @@ class DataTransformationConfig:
     val_size: float
     random_state: int
     tokenizer_name: str = None  # Optional: for adding tokenization later
+
+
+@dataclass(frozen=True)
+class ModelTrainerConfig:
+    """
+    Configuration for the Model Training (Vector DB) stage.
+
+    Attributes:
+        root_dir (Path): Root directory for model artifacts.
+        data_path (Path): Path to the training data.
+        db_path (Path): Path where the ChromaDB will be persisted.
+        model_name (str): Name of the sentence-transformer model.
+        collection_name (str): Name of the ChromaDB collection.
+    """
+
+    root_dir: Path
+    data_path: Path
+    db_path: Path
+    model_name: str
+    collection_name: str
+    embedding_provider: str
+    batch_size: int

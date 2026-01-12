@@ -1,0 +1,16 @@
+# Stores hyperparameters (ONLY tunable values).
+
+data_validation:
+  min_desc_len: 20  # Drop books with descriptions shorter than this
+  categories_min_len: 2
+
+data_transformation:
+  test_size: 0.30
+  val_size: 0.50     # 0.5 of 30% = 15% of total
+  random_state: 42
+
+model_trainer:
+  embedding_provider: huggingface  # Options: huggingface, gemini
+  model_name: sentence-transformers/all-MiniLM-L6-v2  # For Gemini use: models/embedding-001
+  collection_name: books
+  batch_size: 15 # Reduced from 64 to prevent 429 RESOURCE_EXHAUSTED errors

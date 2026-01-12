@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 # --- Config & Params ---
 CONFIG_DIR = PROJECT_ROOT / "config"
 CONFIG_FILE_PATH = CONFIG_DIR / "config.yaml"
-PARAMS_FILE_PATH = PROJECT_ROOT / "params.yaml"
+PARAMS_FILE_PATH = CONFIG_DIR / "params.yaml"
 
 # --- Data Directories ---
 DATA_DIR = PROJECT_ROOT / "data"

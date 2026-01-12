@@ -4,7 +4,6 @@ hybrid-book-recommender
 ├── .env                       <- Secret environment variables (Gemini API Key, AWS creds).
 ├── .gitignore                 <- Files to ignore by Git.
 ├── dvc.yaml                   <- The Pipeline Conductor.
-├── params.yaml                <- Hyperparameters (K-neighbors, Chunk size).
 ├── pyproject.toml             <- UV dependency definitions.
 ├── Dockerfile                 <- Production container definition.
 ├── template.py                <- Python script to generate the MLOps directory structure (Configuration, Components, Pipelines) automatically.
@@ -14,11 +13,26 @@ hybrid-book-recommender
 │   └── workflows/             <- CI/CD (main.yaml).
 │
 ├── artifacts/
-│   └── data_ingestion/
-│       ├── data.zip
-│       └── books.csv  (The extracted file)
+│   ├── data_ingestion/
+│   │   ├── data.zip
+│   │   └── books.csv (The extracted file)
+│   │
+│   ├── data_validation/
+│   │   ├── clean_books.csv (The cleaned file)
+│   │   └── status.txt (Validation status)
+│   │
+│   ├── data_transformation/
+│   │   ├── train.csv
+│   │   ├── val.csv
+│   │   └── test.csv
+│   │
+│   └── model_trainer/
+│       └── vectordb/
+│           ├── 83e179a0-4895-4b97-93a7-2feb1c60ef45/
+│           └── chroma.sqlite3         <- ChromaDB.
 │
 ├── config/
+│   ├── params.yaml            <- Hyperparameters (K-neighbors, Chunk size).
 │   └── config.yaml            <- System paths (artifacts/data).
 │
 ├── 🛡️ Hybrid-book-Recommender.code-workspace <- VS Code workspace configuration.

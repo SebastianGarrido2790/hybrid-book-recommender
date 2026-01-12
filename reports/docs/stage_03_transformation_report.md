@@ -11,16 +11,16 @@ The transformation stage follows a linear dependency injection pattern, consumin
 ### **The Data Flow**
 ```mermaid
 graph TD
-    A[artifacts/data_validation/clean_books.csv] -->|Input| B(DataTransformation Component)
-    C[config/config.yaml] -->|Paths| D(ConfigurationManager)
-    E[params.yaml] -->|Split Ratios| D
+    A["artifacts/data_validation/clean_books.csv"] -->|Input| B(DataTransformation Component)
+    C["config/config.yaml"] -->|Paths| D(ConfigurationManager)
+    E["params.yaml"] -->|Split Ratios| D
     D -->|Creates| F[DataTransformationConfig]
     F -->|Injected into| B
-    B -->|Generates| G[train.csv]
-    B -->|Generates| H[val.csv]
-    B -->|Generates| I[test.csv]
-    J[Pipeline Script] -->|Orchestrates| B
-    K[main.py] -->|Calls| J
+    B -->|Generates| G["train.csv"]
+    B -->|Generates| H["val.csv"]
+    B -->|Generates| I["test.csv"]
+    J["Pipeline Script"] -->|Orchestrates| B
+    K["main.py"] -->|Calls| J
 ```
 
 ### **Component Interaction**

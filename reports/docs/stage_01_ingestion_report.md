@@ -11,12 +11,12 @@ The architecture follows a linear dependency injection pattern, ensuring that da
 ### **The Data Flow**
 ```mermaid
 graph TD
-    A[config/config.yaml] -->|Read by| B(ConfigurationManager)
-    A1[params.yaml] -->|Read via dvc.api| B
+    A["config/config.yaml"] -->|Read by| B(ConfigurationManager)
+    A1["params.yaml"] -->|Read via dvc.api| B
     B -->|Creates| C[DataIngestionConfig]
     C -->|Injected into| D[DataIngestion Component]
     D -->|Orchestrated by| E[Pipeline Script]
-    G[main.py] -->|Calls| E
+    G["main.py"] -->|Calls| E
     E -->|Triggered by| F[DVC Repro]
     G -->|Triggered by| H[Manual Execution]
 ```

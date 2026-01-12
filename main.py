@@ -12,6 +12,7 @@ logger = get_logger(headline="main.py")
 from src.pipeline.stage_01_ingestion import DataIngestionTrainingPipeline
 from src.pipeline.stage_02_validation import DataValidationTrainingPipeline
 from src.pipeline.stage_03_transformation import DataTransformationTrainingPipeline
+from src.pipeline.stage_04_training import ModelTrainingPipeline
 
 
 # 1. Data Ingestion
@@ -38,6 +39,16 @@ log_spacer()
 try:
     data_transformation = DataTransformationTrainingPipeline()
     data_transformation.main()
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+log_spacer()
+
+# 4. Model Training
+try:
+    model_trainer = ModelTrainingPipeline()
+    model_trainer.main()
 except Exception as e:
     logger.exception(e)
     raise e

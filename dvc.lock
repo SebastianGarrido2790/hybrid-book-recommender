@@ -5,8 +5,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: f7babed38199d75def2d1278fb676eb5
-      size: 822
+      md5: 21df0c50498c7898c661096885b289aa
+      size: 971
     - path: src/pipeline/stage_01_ingestion.py
       hash: md5
       md5: d6687ecd67640c1c4aad875e8ed969f7
@@ -58,3 +58,29 @@ stages:
       hash: md5
       md5: 347fb6fccc65741c133914afb6cdcf1c
       size: 4134467
+  model_training:
+    cmd: uv run python -m src.pipeline.stage_04_training
+    deps:
+    - path: artifacts/data_transformation
+      hash: md5
+      md5: 98e44a13a1f2caff40aa29164e5914e3.dir
+      size: 4134411
+      nfiles: 3
+    - path: config/config.yaml
+      hash: md5
+      md5: 21df0c50498c7898c661096885b289aa
+      size: 971
+    - path: src/pipeline/stage_04_training.py
+      hash: md5
+      md5: b117c61a4c25055cf79dc27c1c855acf
+      size: 1647
+    params:
+      params.yaml:
+        model_trainer.collection_name: books
+        model_trainer.model_name: sentence-transformers/all-MiniLM-L6-v2
+    outs:
+    - path: artifacts/model_trainer/vectordb
+      hash: md5
+      md5: a2eef57300121acfd3a4665221a4c3d2.dir
+      size: 33384540
+      nfiles: 6

@@ -29,3 +29,15 @@ stages:
       - data_transformation.random_state
     outs:
       - artifacts/data_transformation
+
+  model_training:
+    cmd: uv run python -m src.pipeline.stage_04_training
+    deps:
+      - src/pipeline/stage_04_training.py
+      - config/config.yaml
+      - artifacts/data_transformation
+    params:
+      - model_trainer.model_name
+      - model_trainer.collection_name
+    outs:
+      - artifacts/model_trainer/vectordb

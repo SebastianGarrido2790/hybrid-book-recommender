@@ -45,18 +45,18 @@ Here is the comprehensive overview of how we will execute this Hybrid Recommende
 
 ---
 
-### **I. The AI Engineering Lifecycle (CRISP-DM + MLOps)**
+## **I. The AI Engineering Lifecycle (CRISP-DM + MLOps)**
 
 We will not build linearly. We will iterate through cycles, moving from "Lab" (Notebooks) to "Factory" (Pipelines) to "Showroom" (Deployment).
 
-#### **Phase 1: Business & Data Understanding (The Foundation)**
+### **Phase 1: Business & Data Understanding (The Foundation)**
 
   * **Goal:** Define exactly *how* the hybrid logic works and ensure our data supports it.
   * **Action:** We will audit the `7k-books` dataset. We need to decide the specific **Weighting Strategy** ($\alpha$ and $\beta$) for the hybrid merge:
     $$Score_{final} = \alpha \cdot Score_{Collaborative} + \beta \cdot Score_{Semantic}$$
   * **Deliverable:** A Data Validation Report and a finalized schema (Pydantic models).
 
-#### **Phase 2: Data Engineering (The Pipeline Core)**
+### **Phase 2: Data Engineering (The Pipeline Core)**
 
   * **Goal:** Create a reproducible data flow.
   * **Tools:** `uv` for environment, `DVC` for versioning.
@@ -64,7 +64,7 @@ We will not build linearly. We will iterate through cycles, moving from "Lab" (N
     1.  **Structured Track:** Cleaning ratings, pivoting to user-item matrix (Sparse Matrices).
     2.  **Unstructured Track:** Text cleaning, LLM Augmentation (Sentiment tagging), and Embedding generation (Vectorization).
 
-#### **Phase 3: Modeling (The Hybrid Engine)**
+### **Phase 3: Modeling (The Hybrid Engine)**
 
   * **Goal:** Train modular components that can be swapped easily (Adaptability).
   * **Collaborative:** Implement Nearest Neighbors (KNN). It's simple, interpretable, and effective for dense clusters.
@@ -100,27 +100,22 @@ We have refactored the pipeline to adhere to the **Single Responsibility Princip
 
 #### **Stage 04: Model Training (`stage_04_model_trainer.py`)**
 * **Goal:** Train the engines.
-* **Track A (Traditional):** Fit `NearestNeighbors` on interaction data.
+* **Track A (Traditional):** Fit `NearestNeighbors` on interaction data. Save as `model.pkl`.
 * **Track B (GenAI):**
     * Connects to **Gemini API**.
     * Generates **Vector Embeddings** for book descriptions (Title + Author + Description).
     * Indexes embeddings into **ChromaDB**.
-* **Tracking:** Logs parameters (embedding model name, chunk size) to **MLflow**.
+    * **Vector DB:** Use `LangChain` to embed book summaries (using `GoogleGenerativeAIEmbeddings`) and push them into **ChromaDB** (local) or **FAISS**.
+    * Save as `vector_db.pkl`.
+* **Tracking:** Logs the KNN metrics (cluster inertia) and the Vector DB parameters (embedding model name, chunk size) to **MLflow**.
 
-
-#### Stage 03: Model Training & Vector Indexing
-
-1.  **KNN:** Fit the `NearestNeighbors` algorithm on the matrix. Save as `model.pkl`.
-2.  **Vector DB:** Use `LangChain` to embed book summaries (using `GoogleGenerativeAIEmbeddings`) and push them into **ChromaDB** (local) or **FAISS**.
-3.  **Tracking:** Log the KNN metrics (cluster inertia) and the Vector DB size to **MLflow**.
-
-#### **Phase 4: Deployment (The Production Layer)**
+### **Phase 4: Deployment (The Production Layer)**
 
   * **Goal:** Serve the model with high reliability.
   * **Containerization:** We will use **Docker** to package the OS, UV environment, code, and artifacts into a single portable unit.
   * **CI/CD:** We will use **GitHub Actions** to automate the "Build & Push" process whenever you commit code, ensuring that the production branch is always deployable.
 
-#### Docker Integration
+### Docker Integration
 
 We will write a `Dockerfile` that:
 
@@ -130,7 +125,7 @@ We will write a `Dockerfile` that:
 4.  Runs `uv sync` to install dependencies.
 5.  Exposes port 8501 (Streamlit).
 
-#### AWS & CI/CD
+### AWS & CI/CD
 
   * **GitHub Actions:** On a push to `main`:
     1.  Run unit tests (`pytest`).
@@ -140,7 +135,7 @@ We will write a `Dockerfile` that:
 
 ---
 
-### **II. Project Structure (Optimization)**
+## **II. Project Structure (Optimization)**
 
 To maximize **Maintainability** and **Separation of Concerns** for a DVC pipeline unmlike classic Cookiecutter Data Science, we should use a decouple **Pipeline Stages** (the scripts DVC runs) from the **Model Definitions** (the logic).
 
@@ -186,7 +181,7 @@ src/
 
 ---
 
-### **III. Expected Deliverables**
+## **III. Expected Deliverables**
 
 By the end of this project, you will have:
 
@@ -199,7 +194,7 @@ By the end of this project, you will have:
 
 ---
 
-### **IV. Potential Starting Points**
+## **IV. Potential Starting Points**
 
 Here is a recommended roadmap to begin:
 

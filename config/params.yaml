@@ -13,4 +13,14 @@ model_trainer:
   embedding_provider: huggingface  # Options: huggingface, gemini
   model_name: sentence-transformers/all-MiniLM-L6-v2  # For Gemini use: models/embedding-001
   collection_name: books
-  batch_size: 15 # Reduced from 64 to prevent 429 RESOURCE_EXHAUSTED errors
+  batch_size: 15  # Reduced from 64 to prevent 429 RESOURCE_EXHAUSTED errors
+
+inference:
+  # IMPORTANT: Model name and provider must match the ones used in 'model_trainer' 
+  # for semantic search to work correctly with existing indexes.
+  embedding_provider: huggingface
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  collection_name: books
+  top_k: 10
+  popularity_weight: 0.2
+  

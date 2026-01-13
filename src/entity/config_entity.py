@@ -80,6 +80,8 @@ class ModelTrainerConfig:
         db_path (Path): Path where the ChromaDB will be persisted.
         model_name (str): Name of the sentence-transformer model.
         collection_name (str): Name of the ChromaDB collection.
+        embedding_provider (str): Provider of the embedding model (huggingface or gemini).
+        batch_size (int): Number of documents to process in each batch.
     """
 
     root_dir: Path
@@ -89,3 +91,27 @@ class ModelTrainerConfig:
     collection_name: str
     embedding_provider: str
     batch_size: int
+
+
+@dataclass(frozen=True)
+class InferenceConfig:
+    """
+    Configuration for the Inference Stage (Hybrid Recommender).
+
+    Attributes:
+        model_name (str): Name of the sentence-transformer model.
+        embedding_provider (str): Provider of the embedding model (huggingface or gemini).
+        chroma_db_dir (Path): Path to the ChromaDB directory.
+        data_path (Path): Path to the data file.
+        collection_name (str): Name of the ChromaDB collection.
+        top_k (int): Number of top recommendations to return.
+        popularity_weight (float): Weight for the rating boost in hybrid score.
+    """
+
+    model_name: str
+    embedding_provider: str
+    chroma_db_dir: Path
+    data_path: Path
+    collection_name: str
+    top_k: int
+    popularity_weight: float

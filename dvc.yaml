@@ -13,8 +13,9 @@ stages:
       - src/pipeline/stage_02_validation.py
       - artifacts/data_ingestion/books.csv
     params:
-      - data_validation.min_desc_len
-      - data_validation.categories_min_len
+      - config/params.yaml:
+        - data_validation.min_desc_len
+        - data_validation.categories_min_len
     outs:
       - artifacts/data_validation/clean_books.csv
 
@@ -24,9 +25,10 @@ stages:
       - src/pipeline/stage_03_transformation.py
       - artifacts/data_validation/clean_books.csv
     params:
-      - data_transformation.test_size
-      - data_transformation.val_size
-      - data_transformation.random_state
+      - config/params.yaml:
+        - data_transformation.test_size
+        - data_transformation.val_size
+        - data_transformation.random_state
     outs:
       - artifacts/data_transformation
 
@@ -37,7 +39,22 @@ stages:
       - config/config.yaml
       - artifacts/data_transformation
     params:
-      - model_trainer.model_name
-      - model_trainer.collection_name
+      - config/params.yaml:
+        - model_trainer.model_name
+        - model_trainer.collection_name
     outs:
       - artifacts/model_trainer/vectordb
+
+  prediction:
+    cmd: uv run python -m src.pipeline.stage_05_prediction
+    deps:
+      - src/pipeline/stage_05_prediction.py
+      - src/models/hybrid_recommender.py
+      - artifacts/model_trainer/vectordb
+      - artifacts/data_validation/clean_books.csv
+    params:
+      - config/params.yaml:
+        - inference.top_k
+        - inference.popularity_weight
+    outs:
+      - artifacts/prediction/results.txt

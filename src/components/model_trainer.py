@@ -9,8 +9,7 @@ import pandas as pd
 from tqdm import tqdm
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from src.models.llm_utils import EmbeddingFactory
 from langchain_core.documents import Document
 from src.entity.config_entity import ModelTrainerConfig
 from src.utils.logger import get_logger
@@ -35,26 +34,9 @@ class ModelTrainer:
         """
         Factory method to get the embedding function based on configuration.
         """
-        provider = self.config.embedding_provider.lower()
-        model_name = self.config.model_name
-
-        if provider == "huggingface":
-            logger.info(f"Using HuggingFace Embeddings: {model_name}")
-            return HuggingFaceEmbeddings(model_name=model_name)
-        elif provider == "gemini":
-            api_key = os.getenv("GOOGLE_API_KEY")
-            if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found in environment variables. Please check your .env file."
-                )
-            logger.info(f"Using Google Gemini Embeddings: {model_name}")
-            return GoogleGenerativeAIEmbeddings(
-                model=model_name, google_api_key=api_key
-            )
-        else:
-            raise ValueError(
-                f"Unsupported embedding provider: {provider}. Options: 'huggingface', 'gemini'."
-            )
+        return EmbeddingFactory.get_embedding_function(
+            provider=self.config.embedding_provider, model_name=self.config.model_name
+        )
 
     def initiate_model_training(self):
         """

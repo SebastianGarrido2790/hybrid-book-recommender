@@ -28,7 +28,7 @@ stages:
       md5: 56231ddde3847fa176330bf0ce5a74ed
       size: 1756
     params:
-      params.yaml:
+      config/params.yaml:
         data_transformation.random_state: 42
         data_transformation.test_size: 0.3
         data_transformation.val_size: 0.5
@@ -50,7 +50,7 @@ stages:
       md5: e11562436e1b58b9695d0c92d9d9777d
       size: 1704
     params:
-      params.yaml:
+      config/params.yaml:
         data_validation.categories_min_len: 2
         data_validation.min_desc_len: 20
     outs:
@@ -75,12 +75,41 @@ stages:
       md5: b117c61a4c25055cf79dc27c1c855acf
       size: 1647
     params:
-      params.yaml:
+      config/params.yaml:
         model_trainer.collection_name: books
         model_trainer.model_name: sentence-transformers/all-MiniLM-L6-v2
     outs:
     - path: artifacts/model_trainer/vectordb
       hash: md5
-      md5: a2eef57300121acfd3a4665221a4c3d2.dir
-      size: 33384540
+      md5: 4068a8b2409240b5c3a6e4361ab788dd.dir
+      size: 33409252
       nfiles: 6
+  prediction:
+    cmd: uv run python -m src.pipeline.stage_05_prediction
+    deps:
+    - path: artifacts/data_validation/clean_books.csv
+      hash: md5
+      md5: 347fb6fccc65741c133914afb6cdcf1c
+      size: 4134467
+    - path: artifacts/model_trainer/vectordb
+      hash: md5
+      md5: f3c0876692be089bc3b75a07f5456123.dir
+      size: 33409252
+      nfiles: 6
+    - path: src/models/hybrid_recommender.py
+      hash: md5
+      md5: 107b655ca89a68b841d221548fd6fe4d
+      size: 5041
+    - path: src/pipeline/stage_05_prediction.py
+      hash: md5
+      md5: e47fc23e1755340a564a375cd410090e
+      size: 3161
+    params:
+      config/params.yaml:
+        inference.popularity_weight: 0.2
+        inference.top_k: 10
+    outs:
+    - path: artifacts/prediction/results.txt
+      hash: md5
+      md5: cc8f4ae31b27d3f114eb28e138d0e477
+      size: 6306

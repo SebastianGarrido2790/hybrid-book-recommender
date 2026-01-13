@@ -12,8 +12,9 @@ from src.entity.config_entity import (
     DataValidationConfig,
     DataTransformationConfig,
     ModelTrainerConfig,
+    InferenceConfig,
 )
-from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH
+from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
 
 
 class ConfigurationManager:
@@ -34,8 +35,14 @@ class ConfigurationManager:
             config_filepath (Path): Path to the static configuration file.
             params_filepath (Path): Path to the parameters file (tracked by DVC).
         """
+        import os
+
         self.config = read_yaml(config_filepath)
-        self.params = ConfigBox(dvc.api.params_show())
+
+        # DVC API expects paths relative to the project root
+        rel_params_path = os.path.relpath(params_filepath, PROJECT_ROOT)
+        self.params = ConfigBox(dvc.api.params_show(rel_params_path))
+
         create_directories([self.config.artifacts_root])
 
     def get_data_ingestion_config(self) -> DataIngestionConfig:
@@ -129,3 +136,22 @@ class ConfigurationManager:
         )
 
         return model_trainer_config
+
+    def get_inference_config(self) -> InferenceConfig:
+        """
+        Creates the Inference configuration entity.
+        """
+        model_trainer_config = self.config.model_trainer
+        params_inference = self.params.inference
+
+        inference_config = InferenceConfig(
+            model_name=params_inference.model_name,
+            embedding_provider=params_inference.embedding_provider,
+            chroma_db_dir=PROJECT_ROOT / model_trainer_config.db_path,
+            data_path=PROJECT_ROOT / self.config.data_validation.cleaned_data_file,
+            collection_name=params_inference.collection_name,
+            top_k=params_inference.top_k,
+            popularity_weight=params_inference.popularity_weight,
+        )
+
+        return inference_config

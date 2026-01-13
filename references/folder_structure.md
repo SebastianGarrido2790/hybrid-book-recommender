@@ -26,10 +26,13 @@ hybrid-book-recommender
 │   │   ├── val.csv
 │   │   └── test.csv
 │   │
-│   └── model_trainer/
-│       └── vectordb/
-│           ├── 83e179a0-4895-4b97-93a7-2feb1c60ef45/
-│           └── chroma.sqlite3         <- ChromaDB.
+│   ├── model_trainer/
+│   │    └── vectordb/
+│   │        ├── 83e179a0-4895-4b97-93a7-2feb1c60ef45/
+│   │        └── chroma.sqlite3         <- ChromaDB.
+│   │
+│   └── prediction/
+│       └── results.txt
 │
 ├── config/
 │   ├── params.yaml            <- Hyperparameters (K-neighbors, Chunk size).
@@ -42,10 +45,19 @@ hybrid-book-recommender
 ├── notebooks/                 <- Jupyter notebooks.
 │
 ├── references/                <- Data dictionaries, manuals, and all other explanatory materials.
-│   └── folder_structure.md
+│   ├── dataset_analysis.md
+│   ├── folder_structure.md
+│   ├── product_requirements.md
+│   └── project_overview.md
 │
 ├── reports/                   <- Generated analysis as HTML, PDF, LaTeX, etc.
 │   ├── docs/                  <- Generated documents to be used in reporting.
+│   │   ├── stage_01_ingestion.md
+│   │   ├── stage_02_validation.md
+│   │   ├── stage_03_transformation.md
+│   │   ├── stage_04_training.md
+│   │   └── stage_05_prediction.md
+│   │
 │   └── figures/               <- Generated graphics and figures to be used in reporting.
 │
 └── src/                            <- Source code for use in this project.
@@ -79,7 +91,8 @@ hybrid-book-recommender
     │   ├── stage_01_ingestion.py       <- Calls component.ingest().
     │   ├── stage_02_validation.py      <- Calls component.validate().
     │   ├── stage_03_transformation.py  <- Calls component.transform().
-    │   └── stage_04_training.py        <- Calls component.train().
+    │   ├── stage_04_training.py        <- Calls component.train().
+    │   └── stage_05_prediction.py      <- Calls component.predict().
     │
     ├── models/                     <- Architecture Definitions.
     │   ├── __init__.py

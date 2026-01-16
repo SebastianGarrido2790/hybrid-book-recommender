@@ -11,10 +11,12 @@ from src.entity.config_entity import (
     DataIngestionConfig,
     DataValidationConfig,
     DataTransformationConfig,
+    DataEnrichmentConfig,
     ModelTrainerConfig,
     InferenceConfig,
 )
 from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
+from pathlib import Path
 
 
 class ConfigurationManager:
@@ -113,6 +115,26 @@ class ConfigurationManager:
 
         return data_transformation_config
 
+    def get_data_enrichment_config(self) -> DataEnrichmentConfig:
+        """
+        Creates the Data Enrichment (Zero-Shot) configuration entity.
+        """
+        config = self.config.data_enrichment
+        params = self.params.data_enrichment
+
+        create_directories([config.root_dir])
+
+        data_enrichment_config = DataEnrichmentConfig(
+            root_dir=Path(config.root_dir),
+            data_path=Path(config.data_path),
+            enriched_data_path=Path(config.enriched_data_path),
+            model_name=params.model_name,
+            candidate_labels=params.candidate_labels,
+            batch_size=params.batch_size,
+        )
+
+        return data_enrichment_config
+
     def get_model_trainer_config(self) -> ModelTrainerConfig:
         """
         Creates the Model Trainer (Vector DB) configuration entity.
@@ -144,11 +166,16 @@ class ConfigurationManager:
         model_trainer_config = self.config.model_trainer
         params_inference = self.params.inference
 
+        # Prefer enriched data if it exists, fallback to clean data
+        data_path = PROJECT_ROOT / self.config.data_enrichment.enriched_data_path
+        if not data_path.exists():
+            data_path = PROJECT_ROOT / self.config.data_validation.cleaned_data_file
+
         inference_config = InferenceConfig(
             model_name=params_inference.model_name,
             embedding_provider=params_inference.embedding_provider,
             chroma_db_dir=PROJECT_ROOT / model_trainer_config.db_path,
-            data_path=PROJECT_ROOT / self.config.data_validation.cleaned_data_file,
+            data_path=data_path,
             collection_name=params_inference.collection_name,
             top_k=params_inference.top_k,
             popularity_weight=params_inference.popularity_weight,

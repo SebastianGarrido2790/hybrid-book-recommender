@@ -1,6 +1,6 @@
 stages:
   data_ingestion:
-    cmd: uv run python -m src.pipeline.stage_01_ingestion
+    cmd: python -m src.pipeline.stage_01_ingestion
     deps:
       - src/pipeline/stage_01_ingestion.py
       - config/config.yaml
@@ -8,7 +8,7 @@ stages:
       - artifacts/data_ingestion/books.csv
 
   data_validation:
-    cmd: uv run python -m src.pipeline.stage_02_validation
+    cmd: python -m src.pipeline.stage_02_validation
     deps:
       - src/pipeline/stage_02_validation.py
       - artifacts/data_ingestion/books.csv
@@ -20,7 +20,7 @@ stages:
       - artifacts/data_validation/clean_books.csv
 
   data_transformation:
-    cmd: uv run python -m src.pipeline.stage_03_transformation
+    cmd: python -m src.pipeline.stage_03_transformation
     deps:
       - src/pipeline/stage_03_transformation.py
       - artifacts/data_validation/clean_books.csv
@@ -33,7 +33,7 @@ stages:
       - artifacts/data_transformation
 
   model_training:
-    cmd: uv run python -m src.pipeline.stage_04_training
+    cmd: python -m src.pipeline.stage_04_training
     deps:
       - src/pipeline/stage_04_training.py
       - config/config.yaml
@@ -46,7 +46,7 @@ stages:
       - artifacts/model_trainer/vectordb
 
   prediction:
-    cmd: uv run python -m src.pipeline.stage_05_prediction
+    cmd: python -m src.pipeline.stage_05_prediction
     deps:
       - src/pipeline/stage_05_prediction.py
       - src/models/hybrid_recommender.py

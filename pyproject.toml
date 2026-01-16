@@ -31,4 +31,6 @@ dependencies = [
     "streamlit>=1.52.0",
     "tqdm>=4.67.1",
     "types-pyyaml>=6.0.12.20250915",
+    "transformers>=4.48.0",
+    "torch>=2.5.1",
 ]

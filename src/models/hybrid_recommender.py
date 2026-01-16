@@ -9,6 +9,7 @@ from langchain_chroma import Chroma
 from src.models.llm_utils import EmbeddingFactory
 from src.entity.config_entity import InferenceConfig
 from src.utils.logger import get_logger
+from src.utils.paths import PROJECT_ROOT
 
 logger = get_logger(__name__)
 
@@ -46,14 +47,19 @@ class HybridRecommender:
         self.books_metadata = pd.read_csv(self.config.data_path)
         self.books_metadata.set_index("isbn13", inplace=True)
 
-        logger.info(f"Hybrid Recommender initialized. DB: {self.config.chroma_db_dir}")
+        logger.info(
+            f"Hybrid Recommender initialized. DB: {self.config.chroma_db_dir.relative_to(PROJECT_ROOT)}"
+        )
 
-    def recommend(self, query: str) -> List[Dict[str, Any]]:
+    def recommend(
+        self, query: str, category_filter: str = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieves and ranks book recommendations based on a hybrid score.
 
         Args:
             query (str): The natural language search query (e.g., "Space opera with aliens").
+            category_filter (str, optional): A category to filter results by (e.g., "Non-Fiction").
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries, each containing book metadata
@@ -62,39 +68,45 @@ class HybridRecommender:
         top_k = self.config.top_k
         popularity_weight = self.config.popularity_weight
 
-        logger.info(f"Processing query: '{query}'")
+        logger.info(f"Processing query: '{query}' (Filter: {category_filter})")
 
-        # 1. Semantic Search (Fetch more to filter)
-        results = self.vector_store.similarity_search_with_score(query, k=top_k * 3)
+        # 1. Semantic Search (Fetch more to allow for filtering)
+        # If we have a filter, we fetch even more to ensure we have enough results after filtering.
+        fetch_k = top_k * 5 if category_filter else top_k * 3
+        results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
 
         recommendations = []
 
         for doc, score in results:
             try:
                 # --- ISBN CASTING ---
-                # Metadata stores ISBN as string (e.g., "9780123...").
-                # DataFrame index is Int64. We must clean and cast.
                 isbn_str = doc.metadata.get("isbn", "0")
-                # Remove any non-digit characters
                 isbn_clean = "".join(filter(str.isdigit, str(isbn_str)))
                 isbn = int(isbn_clean) if isbn_clean else 0
 
                 # Check if we have rating data for this book
                 if isbn in self.books_metadata.index:
                     book_row = self.books_metadata.loc[isbn]
-                    # Handle duplicate ISBNs in CSV
                     if isinstance(book_row, pd.DataFrame):
                         book_row = book_row.iloc[0]
+
+                    # --- CATEGORICAL FILTERING ---
+                    # Use 'simple_category' if available, else fallback to 'categories'
+                    category = book_row.get("simple_category")
+                    if category is None:
+                        category = book_row.get("categories", "Uncategorized")
+
+                    if (
+                        category_filter
+                        and category_filter.lower() != str(category).lower()
+                    ):
+                        continue
 
                     rating = float(book_row.get("average_rating", 0))
                     ratings_count = int(book_row.get("ratings_count", 0))
 
                     # 2. Hybrid Scoring
-                    # Cosine Distance: 0 (Identical) to ~2 (Opposite). We invert it.
                     similarity_score = 1 - score
-
-                    # Score = Similarity + (Normalized Rating * Weight)
-                    # Example: 0.8 + (4.5/5 * 0.2) = 0.8 + 0.18 = 0.98
                     hybrid_score = similarity_score + (
                         (rating / 5.0) * popularity_weight
                     )
@@ -105,6 +117,7 @@ class HybridRecommender:
                             "title": doc.metadata.get("title"),
                             "authors": doc.metadata.get("authors"),
                             "description": doc.metadata.get("description"),
+                            "category": category,
                             "rating": rating,
                             "ratings_count": ratings_count,
                             "score": hybrid_score,

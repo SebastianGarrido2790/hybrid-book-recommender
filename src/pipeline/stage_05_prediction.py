@@ -52,11 +52,11 @@ class PredictionPipeline:
 
                     for i, book in enumerate(results):
                         print(
-                            f"{i + 1}. {book['title']} (Rating: {book['rating']}, Score: {book['score']:.3f})"
+                            f"{i + 1}. {book['title']} | {book['category']} (Rating: {book['rating']}, Score: {book['score']:.3f})"
                         )
                         print(f"   Author: {book['authors']}")
                         # Truncate description for cleaner output
-                        result_line = f"{i + 1}. {book['title']} (Rating: {book['rating']}, Score: {book['score']:.3f})\n"
+                        result_line = f"{i + 1}. {book['title']} | {book['category']} (Rating: {book['rating']}, Score: {book['score']:.3f})\n"
                         f.write(result_line)
                         f.write(f"   Author: {book['authors']}\n")
 
@@ -68,7 +68,7 @@ class PredictionPipeline:
                         print(f"   Desc: {desc_preview}")
                         f.write(f"   Desc: {desc_preview}\n")
 
-            logger.info(f"✅ Results saved to {output_file}")
+            logger.info(f"✅ Results saved to {output_file.relative_to(PROJECT_ROOT)}")
 
         except Exception as e:
             logger.exception(e)

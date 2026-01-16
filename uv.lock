@@ -2195,7 +2195,9 @@ dependencies = [
     { name = "seaborn" },
     { name = "sentence-transformers" },
     { name = "streamlit" },
+    { name = "torch" },
     { name = "tqdm" },
+    { name = "transformers" },
     { name = "types-pyyaml" },
 ]
 
@@ -2225,7 +2227,9 @@ requires-dist = [
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "sentence-transformers", specifier = ">=5.2.0" },
     { name = "streamlit", specifier = ">=1.52.0" },
+    { name = "torch", specifier = ">=2.5.1" },
     { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "transformers", specifier = ">=4.48.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 

@@ -1,10 +1,6 @@
-"""
-This module defines the configuration entities for the pipeline stages.
-It includes the root directory, data path, and tokenizer name.
-"""
-
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List
 
 
 @dataclass(frozen=True)
@@ -66,7 +62,29 @@ class DataTransformationConfig:
     test_size: float
     val_size: float
     random_state: int
-    tokenizer_name: str = None  # Optional: for adding tokenization later
+    tokenizer_name: str = None
+
+
+@dataclass(frozen=True)
+class DataEnrichmentConfig:
+    """
+    Configuration for the Data Enrichment (Zero-Shot) stage.
+
+    Attributes:
+        root_dir (Path): Root directory for data enrichment artifacts.
+        data_path (Path): Path to the cleaned data file.
+        enriched_data_path (Path): Path where the enriched data will be saved.
+        model_name (str): Name of the zero-shot classification model.
+        candidate_labels (List[str]): List of target categories for classification.
+        batch_size (int): Number of descriptions to classify in each batch.
+    """
+
+    root_dir: Path
+    data_path: Path
+    enriched_data_path: Path
+    model_name: str
+    candidate_labels: List[str]
+    batch_size: int
 
 
 @dataclass(frozen=True)
@@ -102,7 +120,7 @@ class InferenceConfig:
         model_name (str): Name of the sentence-transformer model.
         embedding_provider (str): Provider of the embedding model (huggingface or gemini).
         chroma_db_dir (Path): Path to the ChromaDB directory.
-        data_path (Path): Path to the data file.
+        data_path (Path): Path to the data file (enriched or clean).
         collection_name (str): Name of the ChromaDB collection.
         top_k (int): Number of top recommendations to return.
         popularity_weight (float): Weight for the rating boost in hybrid score.

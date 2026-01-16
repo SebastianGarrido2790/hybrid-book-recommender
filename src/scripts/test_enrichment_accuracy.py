@@ -1,0 +1,112 @@
+import pandas as pd
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+from src.utils.logger import get_logger
+import os
+
+logger = get_logger(__name__, headline="EnrichmentAccuracyTest")
+
+
+def test_enrichment_accuracy():
+    """
+    Evaluates the accuracy of the Zero-Shot Enricher by comparing predictions
+    against a manually mapped 'Ground Truth' from the original dataset.
+    """
+    try:
+        data_path = "artifacts/data_enrichment/enriched_books.csv"
+        if not os.path.exists(data_path):
+            logger.error(
+                f"Enriched data not found at {data_path}. Please run enrichment first."
+            )
+            return
+
+        logger.info("Loading enriched dataset...")
+        df = pd.read_csv(data_path)
+
+        # 1. Define Ground Truth Mapping
+        # We map high-frequency original categories to our broad target facets.
+        mapping = {
+            "Fiction": "Fiction",
+            "Juvenile Fiction": "Fiction",
+            "Literary Criticism": "Fiction",
+            "Biography & Autobiography": "Biography",
+            "History": "History",
+            "Science": "Science",
+            "Juvenile Nonfiction": "Non-Fiction",
+            "Social Science": "Non-Fiction",
+            "Religion": "Non-Fiction",
+            "Philosophy": "Non-Fiction",
+            "Business & Economics": "Non-Fiction",
+            "Psychology": "Non-Fiction",
+            "Computers": "Science",  # or Technology if we had it, Science is closest
+        }
+
+        # 2. Filter for Labeled Data
+        # We only keep rows where the original 'categories' is in our mapping keys.
+        df_test = df[df["categories"].isin(mapping.keys())].copy()
+
+        # Create Ground Truth column
+        df_test["ground_truth"] = df_test["categories"].map(mapping)
+
+        # 3. Handle specific overlap cases
+        # Note: Zero-shot might classify 'Literary Criticism' as 'Non-Fiction' (which is technically true),
+        # but our mapping expects 'Fiction' if it's about fiction. This reflects the limitation
+        # mentioned by the user.
+
+        logger.info(
+            f"Evaluating accuracy on {len(df_test)} high-confidence labeled books."
+        )
+
+        # 4. Generate Metrics
+        y_true = df_test["ground_truth"]
+        y_pred = df_test["simple_category"]
+
+        # Filter out prediction labels that aren't in our ground truth sub-analysis if needed
+        # but here we want to see how the model performed overall.
+
+        unique_labels = sorted(list(set(y_true) | set(y_pred)))
+
+        report = classification_report(y_true, y_pred, zero_division=0)
+
+        print("\n" + "=" * 60)
+        print("ZERO-SHOT CLASSIFICATION ACCURACY REPORT")
+        print("=" * 60)
+        print(f"Comparing: 'categories' (Original) vs 'simple_category' (Zero-Shot)")
+        print(f"Sample Size: {len(df_test)} books")
+        print("-" * 60)
+        print(report)
+        print("=" * 60)
+
+        # 5. Output Confusion Matrix
+        unique_labels = sorted(list(set(y_true) | set(y_pred)))
+        cm = confusion_matrix(y_true, y_pred, labels=unique_labels)
+
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(
+            cm,
+            annot=True,
+            fmt="d",
+            xticklabels=unique_labels,
+            yticklabels=unique_labels,
+            cmap="Blues",
+        )
+        plt.xlabel("Predicted (Zero-Shot)")
+        plt.ylabel("True (Original Grouped)")
+        plt.title("Enrichment Accuracy: Granular Confusion Matrix")
+
+        figures_dir = "reports/figures"
+        os.makedirs(figures_dir, exist_ok=True)
+        plot_path = os.path.join(figures_dir, "enrichment_granular_cm.png")
+        plt.savefig(plot_path)
+        logger.info(f"Granular confusion matrix saved to {plot_path}")
+
+        logger.info("Accuracy test completed.")
+
+    except Exception as e:
+        logger.error(f"Test failed: {e}")
+        raise e
+
+
+if __name__ == "__main__":
+    test_enrichment_accuracy()

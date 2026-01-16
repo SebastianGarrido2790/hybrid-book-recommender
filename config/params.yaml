@@ -23,4 +23,9 @@ inference:
   collection_name: books
   top_k: 10
   popularity_weight: 0.2
+
+data_enrichment:
+  model_name: facebook/bart-large-mnli
+  candidate_labels: ["Fiction", "Non-Fiction", "Science", "History", "Biography", "Fantasy", "Thriller"]
+  batch_size: 16
   

@@ -28,4 +28,9 @@ data_enrichment:
   model_name: facebook/bart-large-mnli
   candidate_labels: ["Fiction", "Non-Fiction", "Science", "History", "Biography", "Fantasy", "Thriller"]
   batch_size: 16
+
+tone_analysis:
+  model_name: j-hartmann/emotion-english-distilroberta-base
+  batch_size: 32
+  target_emotions: ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
   

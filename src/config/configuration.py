@@ -1,6 +1,6 @@
 """
-This module serves as the 'Brain' of the system, responsible for coordinating
-configurations and parameters across the pipeline.
+This module serves as the 'Brain' of the system, responsible for coordinating configurations and parameters across the pipeline.
+It centralizes the loading of 'config.yaml' and 'params.yaml', providing strictly-typed Configuration Entity objects for other components.
 """
 
 import dvc.api
@@ -12,6 +12,7 @@ from src.entity.config_entity import (
     DataValidationConfig,
     DataTransformationConfig,
     DataEnrichmentConfig,
+    ToneAnalysisConfig,
     ModelTrainerConfig,
     InferenceConfig,
 )
@@ -135,6 +136,35 @@ class ConfigurationManager:
 
         return data_enrichment_config
 
+    def get_tone_analysis_config(self) -> ToneAnalysisConfig:
+        """
+        Creates the Tone Analysis (Sentiment) configuration entity.
+        """
+        config = self.config.tone_analysis
+        params = self.params.tone_analysis
+
+        create_directories([config.root_dir])
+
+        # Ensure we chain from Enrichment if available, enabling fallback logic is handled
+        # by the component loading, but here we explicitly prefer enriched data as input source.
+        source_data = Path(config.data_path)
+        if not source_data.exists():
+            # If Enriched data doesn't exist, fallback to clean data directly?
+            # Ideally tone analysis should come after enrichment.
+            # But for robustness, we can fallback to clean data.
+            source_data = Path(self.config.data_validation.cleaned_data_file)
+
+        tone_analysis_config = ToneAnalysisConfig(
+            root_dir=Path(config.root_dir),
+            data_path=source_data,
+            output_path=Path(config.output_path),
+            model_name=params.model_name,
+            target_emotions=params.target_emotions,
+            batch_size=params.batch_size,
+        )
+
+        return tone_analysis_config
+
     def get_model_trainer_config(self) -> ModelTrainerConfig:
         """
         Creates the Model Trainer (Vector DB) configuration entity.
@@ -166,8 +196,14 @@ class ConfigurationManager:
         model_trainer_config = self.config.model_trainer
         params_inference = self.params.inference
 
-        # Prefer enriched data if it exists, fallback to clean data
-        data_path = PROJECT_ROOT / self.config.data_enrichment.enriched_data_path
+        # 1. Check for Toned Data (Highest Level)
+        data_path = PROJECT_ROOT / self.config.tone_analysis.output_path
+
+        # 2. Fallback to Enriched Data
+        if not data_path.exists():
+            data_path = PROJECT_ROOT / self.config.data_enrichment.enriched_data_path
+
+        # 3. Fallback to Clean Data (Base Level)
         if not data_path.exists():
             data_path = PROJECT_ROOT / self.config.data_validation.cleaned_data_file
 

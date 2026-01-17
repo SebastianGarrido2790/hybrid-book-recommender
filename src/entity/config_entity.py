@@ -1,3 +1,8 @@
+"""
+Configuration entities for the hybrid book recommender system.
+This module defines dataclass entities to enforce strict type safety and immutability to prevent attribute errors across different stages of the system.
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
@@ -84,6 +89,28 @@ class DataEnrichmentConfig:
     enriched_data_path: Path
     model_name: str
     candidate_labels: List[str]
+    batch_size: int
+
+
+@dataclass(frozen=True)
+class ToneAnalysisConfig:
+    """
+    Configuration for the Tone Analysis (Sentiment) stage.
+
+    Attributes:
+        root_dir (Path): Root directory for tone analysis artifacts.
+        data_path (Path): Path to the enriched data file.
+        output_path (Path): Path where the toned data will be saved.
+        model_name (str): Name of the sentiment analysis model.
+        target_emotions (List[str]): List of target emotions for classification.
+        batch_size (int): Number of descriptions to analyze in each batch.
+    """
+
+    root_dir: Path
+    data_path: Path
+    output_path: Path
+    model_name: str
+    target_emotions: List[str]
     batch_size: int
 
 

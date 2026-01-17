@@ -52,7 +52,7 @@ class HybridRecommender:
         )
 
     def recommend(
-        self, query: str, category_filter: str = None
+        self, query: str, category_filter: str = None, tone_filter: str = None
     ) -> List[Dict[str, Any]]:
         """
         Retrieves and ranks book recommendations based on a hybrid score.
@@ -60,6 +60,7 @@ class HybridRecommender:
         Args:
             query (str): The natural language search query (e.g., "Space opera with aliens").
             category_filter (str, optional): A category to filter results by (e.g., "Non-Fiction").
+            tone_filter (str, optional): A tone to filter results by (e.g., "joy", "fear").
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries, each containing book metadata
@@ -68,11 +69,19 @@ class HybridRecommender:
         top_k = self.config.top_k
         popularity_weight = self.config.popularity_weight
 
-        logger.info(f"Processing query: '{query}' (Filter: {category_filter})")
+        logger.info(
+            f"Processing query: '{query}' (Category: {category_filter}, Tone: {tone_filter})"
+        )
 
         # 1. Semantic Search (Fetch more to allow for filtering)
-        # If we have a filter, we fetch even more to ensure we have enough results after filtering.
-        fetch_k = top_k * 5 if category_filter else top_k * 3
+        # Increase fetch buffer if multiple filters are applied
+        fetch_multiplier = 3
+        if category_filter:
+            fetch_multiplier += 2
+        if tone_filter:
+            fetch_multiplier += 2
+
+        fetch_k = top_k * fetch_multiplier
         results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
 
         recommendations = []
@@ -91,7 +100,6 @@ class HybridRecommender:
                         book_row = book_row.iloc[0]
 
                     # --- CATEGORICAL FILTERING ---
-                    # Use 'simple_category' if available, else fallback to 'categories'
                     category = book_row.get("simple_category")
                     if category is None:
                         category = book_row.get("categories", "Uncategorized")
@@ -100,6 +108,14 @@ class HybridRecommender:
                         category_filter
                         and category_filter.lower() != str(category).lower()
                     ):
+                        continue
+
+                    # --- TONE FILTERING ---
+                    tone = book_row.get(
+                        "dominant_tone", "neutral"
+                    )  # default to neutral if missing
+
+                    if tone_filter and tone_filter.lower() != str(tone).lower():
                         continue
 
                     rating = float(book_row.get("average_rating", 0))
@@ -118,6 +134,7 @@ class HybridRecommender:
                             "authors": doc.metadata.get("authors"),
                             "description": doc.metadata.get("description"),
                             "category": category,
+                            "tone": tone,
                             "rating": rating,
                             "ratings_count": ratings_count,
                             "score": hybrid_score,

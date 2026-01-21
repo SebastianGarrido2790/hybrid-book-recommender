@@ -17,8 +17,8 @@ graph TD
     D -->|Creates| F[InferenceConfig]
     F -->|Injected into| G(HybridRecommender Component)
     H["artifacts/model_trainer/vectordb"] -->|Semantic Context| G
-    I["artifacts/data_validation/clean_books.csv"] -->|Quality Metrics| G
-    G -->|Hybrid Scoring| J["Ranked Recommendations (Top K)"]
+    I["artifacts/tone_analysis/toned_books.csv"] -->|Quality & Tone Metrics| G
+    G -->|Hybrid Logic| J["Ranked Recommendations (Top K)"]
     K["artifacts/prediction/results.txt"] -->|Verification Output| B
 ```
 
@@ -27,7 +27,7 @@ The inference process is organized into five specialized layers:
 
 1.  **Entity Layer (`src/entity/config_entity.py`)**:
     *   **Role:** Defines the `InferenceConfig` schema.
-    *   **Attributes:** `model_name`, `embedding_provider`, `chroma_db_dir`, `data_path` (clean_books.csv), `collection_name`, `top_k`, and `popularity_weight`.
+    *   **Attributes:** `model_name`, `embedding_provider`, `chroma_db_dir`, `data_path` (toned_books.csv), `collection_name`, `top_k`, and `popularity_weight`.
 
 2.  **Configuration Layer (`src/config/configuration.py`)**:
     *   **Role:** Orchestrates the injection of parameters and immutable system paths.
@@ -37,8 +37,8 @@ The inference process is organized into five specialized layers:
     *   **Role:** The "Decision Engine."
     *   **Responsibilities:**
         *   **Vector Querying:** Uses `EmbeddingFactory` to convert queries into vectors and performs a similarity search against ChromaDB.
-        *   **Metadata Lookup:** Performs O(1) lookups in the metadata store (Pandas indexed by ISBN) to retrieve quality metrics.
-        *   **Scoring Logic:** Implements the weighted linear combination of similarity and popularity.
+        *   **Metadata Lookup:** Performs O(1) lookups in the metadata store (Pandas indexed by ISBN) to retrieve quality metrics AND **Emotion Probabilities**.
+        *   **Dynamic Scoring:** context-aware switch between **Weighted Hybrid Score** and **Tone Probability Sort**.
 
 4.  **Utility Layer (`src/models/llm_utils.py`)**:
     *   **Role:** Hardware/API Abstraction.
@@ -55,14 +55,17 @@ The inference process is organized into five specialized layers:
 
 ## 3. Inference Strategy & Hybrid Logic
 
-### **The Hybrid Scoring Formula**
-The system uses a weighted scoring mechanism to rank candidates:
+### **The Context-Aware Ranking Strategy**
+The system uses a dynamic mechanism to rank candidates based on user intent:
 
+#### **A. General Search (Default)**
 $$ Score_{final} = (1 - Distance_{cosine}) + \alpha \cdot (\frac{Rating_{avg}}{5.0}) $$
+*   **Significance:** Prevents the "Niche Trap" (recommending a 1-star book) and the "Bestseller Bias" (recommending popular but irrelevant books).
 
-*   **Semantic Match ($1 - Distance$):** Measures how closely the book's description matches the user's intent.
-*   **Popularity Boost ($\alpha$):** Controlled by `popularity_weight` in `params.yaml`. This gives a "nudge" to highly-rated books.
-*   **Significance:** This approach prevents the "Niche Trap" (recommending a 1-star book just because it has a specific keyword) and the "Bestseller Bias" (recommending popular books that have nothing to do with the query).
+#### **B. Outcome-Based Search (Tone Active)**
+$$ Rank = SortDown(P_{emotion}) $$
+*   **Logic:** If a user selects "Joy", we filter semantically relevant books and then sort them by their `joy` probability score (calculated in `stage_04`).
+*   **Significance:** Ensures that when a user wants a specific "vibe", the system delivers the most emotionally potent match, even if it's slightly less semantically perfect.
 
 ### **Decoupled Architecture**
 Unlike traditional systems where inference is a subset of training code, our architecture allows:

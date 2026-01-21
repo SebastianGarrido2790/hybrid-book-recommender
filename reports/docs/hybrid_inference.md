@@ -7,18 +7,17 @@ The `HybridRecommender` (located in `src/models/hybrid_recommender.py`) acts as 
 
 ## **2. The Hybrid Algorithm**
 
-The final score for a book is calculated using a **Linear Weighted Combination** of Semantic Similarity and Popularity.
+The final score for a book is determined by a **Dynamic Context-Aware Strategy**:
 
+### **A. Default Mode (General Search)**
+If no specific emotional tone is selected, the system prioritizes a balance of relevance and quality:
 $$ Score_{final} = (1 - Distance_{cosine}) + \alpha \cdot (\frac{Rating_{avg}}{5.0}) $$
 
-Where:
-* **$(1 - Distance_{cosine})$**: The Semantic Similarity Score (0 to 1). Higher is better (closer match).
-* **$\alpha$ (alpha)**: The `popularity_weight` hyperparameter (defined in the `inference` section of `params.yaml`).
-* **$Rating_{avg}$**: The book's average rating (1-5 stars) from the "Collaborative" dataset (CSV).
-
-### **Why this works?**
-* **Quality Filtering**: If a book is a **Perfect Semantic Match** (Similarity 1.0) but has a **1-star rating**, its final score is penalized.
-* **Masterpiece Boosting**: If a book is a **Good Match** (Similarity 0.8) and is a **5-star Masterpiece**, it gets a boost, potentially outranking the perfect but poor-quality match.
+### **B. Outcome-Based Mode (Tone Filtering)**
+If a user selects an emotional target (e.g., "Joy"), the system pivots to prioritizing that specific emotional probability:
+1.  **Filter:** Only consider books where $P(Emotion) > 0$.
+2.  **Sort:** Rank primarily by the specific **Emotion Probability** ($P_{emotion}$) in descending order.
+3.  **Secondary Sort:** Use Semantic Similarity as a tie-breaker.
 
 ---
 
@@ -30,18 +29,21 @@ Following the **Antigravity Stack** standards, the `HybridRecommender` follows a
 ### **B. Initialization (`__init__`)**
 *   **Decoupled Embeddings**: Uses `EmbeddingFactory` to instantiate the search model. Note: The `inference` model configuration can now be scaled independently of the `trainer` configuration in `params.yaml`.
 *   **VectorDB Connection**: Establishes a read-only connection to the persisted `chroma_db` (ChromaDB Vector Store).
-*   **Metadata Store**: Loads `clean_books.csv` into a Pandas DataFrame indexed by `isbn13`. This serves as an **O(1) lookup table** for ratings, ensuring sub-millisecond scoring latency.
+*   **Metadata Store**: Loads `toned_books.csv` (Enriched + Toned) into a Pandas DataFrame. This serves as an **O(1) lookup table** for ratings AND emotional probabilities, ensuring sub-millisecond scoring latency.
 
 ### **C. Recommendation Flow (`recommend`)**
 1.  **Semantic Retrieval**:
     *   The user query is converted into a vector.
-    *   ChromaDB returns the top $K \times 3$ candidates to ensure a healthy pool for the quality-filtering phase.
+    *   ChromaDB returns the top $K \times 3$ candidates to ensure a healthy pool.
 2.  **Entity Linking**:
-    *   Extracts the ISBN from the vector metadata. Handles robust type-casting (String to Int64) to ensure consistency with the metadata store.
-3.  **Hybrid Scoring**:
-    *   Calculates the final ranking score using the formula above.
+    *   Extracts the ISBN and hydrates the candidate with metadata (Ratings, Categories, **7-Class Emotion Probabilities**).
+    *   **Thumbnails**: Retrieval now includes the `thumbnail` URL for UI display.
+3.  **Dynamic Sorting**:
+    *   **Context Check**: Determines if a `tone_filter` is active.
+    *   **Ranking**: Applies either the Hybrid Scoring formula OR the Probability Sorting logic.
 4.  **Ranked Response**:
-    *   Sorts the candidate pool by the final score and truncates to the user-defined `top_k`.
+    *   Truncates to the user-defined `top_k`.
+    *   Returns a rich dictionary including the calculated `tone_prob` for UI visualization (e.g., "Mood Score: 0.95").
 
 ---
 
@@ -56,9 +58,12 @@ inference:
   collection_name: books
   top_k: 10
   popularity_weight: 0.2
+  
+tone_analysis:
+  target_emotions: ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
 ```
 
 ### **DVC Integration (`dvc.yaml`)**
 The inference engine is integrated into the project's **Directed Acyclic Graph (DAG)** as `stage_05_prediction`. 
-*   **Reproducibility**: Any change to the `popularity_weight` or the `model_name` will trigger a re-run of the prediction stage to verify the new settings.
-*   **Verifiability**: It produces a `results.txt` artifact in `artifacts/prediction/` which serves as a "Smoke Test" for model quality after every training run.
+*   **Reproducibility**: Any change to `popularity_weight` or `model_name` triggers a re-run.
+*   **Verifiability**: It produces a `results.txt` artifact in `artifacts/prediction/`.

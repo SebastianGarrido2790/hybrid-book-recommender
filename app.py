@@ -1,4 +1,3 @@
-import os
 import gradio as gr
 from src.config.configuration import ConfigurationManager
 from src.models.hybrid_recommender import HybridRecommender
@@ -8,86 +7,62 @@ logger = get_logger(__name__)
 
 
 # --- ENGINE INITIALIZATION ---
-def init_recommender():
-    try:
-        config = ConfigurationManager()
-        inference_config = config.get_inference_config()
-        recommender = HybridRecommender(config=inference_config)
-        return recommender
-    except Exception as e:
-        logger.error(f"Failed to initialize recommender: {e}")
-        return None
+try:
+    config_manager = ConfigurationManager()
+    recommender = HybridRecommender(config=config_manager.get_inference_config())
+except Exception as e:
+    logger.error(f"Failed to initialize recommender: {e}")
+    recommender = None
 
-
-recommender = init_recommender()
-
-# --- CONSTANTS ---
-CATEGORIES = [
-    "All",
-    "Biography",
-    "Fantasy",
-    "Fiction",
-    "History",
-    "Non-Fiction",
-    "Science",
-    "Thriller",
-]
-TONES = ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
+# Constants
+PLACEHOLDER_IMG = "https://via.placeholder.com/140x210.png?text=No+Cover"
 TONE_MAP = {
     "Happy": "joy",
-    "Surprising": "surprise",
-    "Angry": "anger",
-    "Suspenseful": "fear",
     "Sad": "sadness",
+    "Angry": "anger",
+    "Scary": "fear",
+    "Surprising": "surprise",
+    "Disgusting": "disgust",
+    "Neutral": "neutral",
 }
-
-PLACEHOLDER_IMG_ABS = os.path.abspath("assets/placeholder.png")
-PLACEHOLDER_IMG_URL = PLACEHOLDER_IMG_ABS
 
 
 # --- HELPER FUNCTIONS ---
 def get_high_res_image(url):
-    if not isinstance(url, str) or not url or url.lower() == "nan":
-        return PLACEHOLDER_IMG_URL
-
-    url = url.strip().strip("'").strip('"')
-    if url.startswith("http://"):
+    if not url or not isinstance(url, str):
+        return PLACEHOLDER_IMG
+    if "http://" in url:
         url = url.replace("http://", "https://")
-    return f"{url}&fife=w800" if "?" in url else f"{url}?fife=w800"
+    if "&zoom=" in url:
+        import re
+
+        url = re.sub(r"&zoom=\d+", "&zoom=3", url)
+    if "fife=w" not in url:
+        url += "&fife=w800"
+    return url
 
 
-def format_authors(authors_str):
-    if not isinstance(authors_str, str) or not authors_str:
+def format_authors(authors):
+    if not authors:
         return "Unknown Author"
-
-    clean_str = (
-        authors_str.replace("[", "")
-        .replace("]", "")
-        .replace("'", "")
-        .replace('"', "")
-        .replace(";", ",")
-    )
-    authors = [a.strip() for a in clean_str.split(",")]
-
-    if len(authors) == 0:
-        return "Unknown Author"
-    if len(authors) == 1:
-        return authors[0]
-    if len(authors) == 2:
-        return f"{authors[0]} and {authors[1]}"
-    return f"{authors[0]} et al."
+    if isinstance(authors, list):
+        return ", ".join(authors)
+    return str(authors)
 
 
-# --- UI LOGIC ---
-def recommend_books(query, category, tone):
+def search_books(query, category, tone):
     if not recommender:
-        return [], []
+        return [
+            [(PLACEHOLDER_IMG, "Error: Recommender not initialized")],
+            [],
+            "Recommender engine is not ready.",
+        ]
 
     cat_filter = None if category == "All" else category
     tone_filter = TONE_MAP.get(tone) if tone != "All" else None
 
     if not query.strip() and not cat_filter and not tone_filter:
-        return [], []
+        return [[], [], ""]
 
     try:
         results = recommender.recommend(
@@ -95,11 +70,13 @@ def recommend_books(query, category, tone):
         )
     except Exception as e:
         logger.error(f"Recommendation failed: {e}")
-        return [], []
+        return [[], [], ""]
 
-    results = results[:16]
     gallery_items = []
     full_data = []
+
+    if not results:
+        return [[], [], "No books found matches your search."]
 
     for book in results:
         image_url = get_high_res_image(book.get("thumbnail"))
@@ -107,19 +84,10 @@ def recommend_books(query, category, tone):
         authors = format_authors(book.get("authors"))
         desc = book.get("description", "No description available.")
         rating = book.get("rating", "N/A")
-        tone_prob = book.get("tone_prob", 0)
+        tone_prob = book.get("tone_prob", 0.0)
 
-        try:
-            mood_score = f"{float(tone_prob):.2f}"
-        except:
-            mood_score = "N/A"
-
-        # Caption for Gallery Preview
-        truncated_desc = (desc[:120] + "...") if len(desc) > 120 else desc
-        caption = (
-            f"{title} by {authors}\n⭐ {rating} | 🎭 {mood_score}\n{truncated_desc}"
-        )
-
+        # Simplified caption for gallery view
+        caption = f"{title} by {authors}"
         gallery_items.append((image_url, caption))
 
         full_data.append(
@@ -128,87 +96,160 @@ def recommend_books(query, category, tone):
                 "authors": authors,
                 "description": desc,
                 "rating": rating,
-                "mood_score": mood_score,
+                "tone_prob": tone_prob,
                 "thumbnail": image_url,
             }
         )
 
-    return gallery_items, full_data
+    return [gallery_items, full_data, f"Found {len(results)} books."]
 
 
-def on_select(evt: gr.SelectData, data):
-    if not data or evt.index >= len(data):
+def on_select(evt: gr.SelectData, full_data):
+    if not full_data or evt.index >= len(full_data):
         return ""
 
-    book = data[evt.index]
+    book = full_data[evt.index]
 
-    return f"""
-    <div style="background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 20px; margin-top: 20px;">
-        <img src="{book["thumbnail"]}" style="width: 120px; height: 180px; object-fit: cover; border-radius: 5px;">
+    # Display probability if it's significant
+    prob_html = ""
+    try:
+        tprob = float(book.get("tone_prob", 0))
+        if tprob > 0:
+            prob_html = f"<span style='background: #eef2ff; color: #4338ca; padding: 4px 10px; border-radius: 999px; font-size: 0.9rem; margin-left: 8px;'>✨ Mood Score: {tprob:.2f}</span>"
+    except (ValueError, TypeError):
+        pass
+
+    html_template = f"""
+    <div style='background: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; gap: 20px; align-items: flex-start;'>
+        <img src="{book["thumbnail"]}" style="width: 140px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" onerror="this.src='{PLACEHOLDER_IMG}'">
         <div style="flex: 1;">
-            <h3 style="margin: 0 0 5px 0; font-size: 1.5em; color: white;">{book["title"]}</h3>
-            <p style="margin: 0 0 10px 0; color: #ccc;">by {book["authors"]}</p>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <span style="background: #eab308; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em;">⭐ Rating: {book["rating"]}</span>
-                <span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em;">🎭 Mood: {book["mood_score"]}</span>
+            <h3 style='margin: 0; color: #111827; font-size: 1.5rem; font-weight: 700;'>{book["title"]}</h3>
+            <p style='color: #4b5563; font-size: 1.1rem; margin-bottom: 15px;'>by {book["authors"]}</p>
+            <div style='margin-bottom: 15px;'>
+                <span style='background: #f3f4f6; color: #374151; padding: 4px 10px; border-radius: 999px; font-size: 0.9rem;'>⭐ Rating: {book["rating"]}</span>
+                {prob_html}
             </div>
-            <p style="line-height: 1.6; color: #ddd;">{book["description"]}</p>
+            <p style='color: #374151; line-height: 1.6; font-size: 1rem;'>{book["description"]}</p>
         </div>
     </div>
     """
+    return html_template
 
 
-# --- UI DEFINITION ---
-with gr.Blocks(theme=gr.themes.Glass(), title="Semantic book recommender") as demo:
-    gr.Markdown("# Semantic book recommender")
-    gr.Markdown(
-        "Discover your next favorite read using AI-powered semantic search.",
-        elem_classes=["subtitle"],
-    )
+# --- STYLING ---
+theme = gr.themes.Default(
+    primary_hue="blue",
+).set(
+    body_background_fill="#ffffff",
+    block_background_fill="#ffffff",
+    block_border_width="1px",
+    block_title_text_weight="600",
+)
 
+CUSTOM_CSS = """
+.container { max-width: 1200px; margin: auto; padding-top: 20px; }
+.input-row { 
+    background: #f9fafb; 
+    padding: 20px; 
+    border-radius: 12px; 
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+.gallery-container { border: none !important; background: transparent !important; }
+.gr-button-primary { 
+    background: #2563eb !important; 
+    border: none !important;
+    transition: all 0.2s ease;
+}
+.gr-button-primary:hover { background: #1d4ed8 !important; transform: translateY(-1px); }
+"""
+
+with gr.Blocks(theme=theme, css=CUSTOM_CSS, title="Hybrid Book Recommender") as demo:
     # State to store full book data for details view
-    results_state = gr.State([])
+    full_data_state = gr.State([])
 
-    with gr.Row():
-        user_query = gr.Textbox(
-            label="Please enter a description of a book:",
-            placeholder="e.g., A story about forgiveness",
+    with gr.Column(elem_classes=["container"]):
+        gr.Markdown(
+            """
+            <div style='text-align: center; margin-bottom: 30px;'>
+                <h1 style='font-size: 2.5rem; color: #111827; margin-bottom: 10px;'>📚 Hybrid Book Recommender</h1>
+                <p style='font-size: 1.1rem; color: #6b7280;'>Semantic Search meets Collaborative Intelligence</p>
+            </div>
+            """
         )
-        category_dropdown = gr.Dropdown(
-            choices=CATEGORIES, label="Select a category:", value="All"
+
+        with gr.Row(elem_classes=["input-row"]):
+            with gr.Column(scale=4):
+                query_input = gr.Textbox(
+                    label="Search by description",
+                    placeholder="e.g. A gripping mystery set in Victorian London...",
+                    show_label=False,
+                )
+            with gr.Column(scale=2):
+                category_dropdown = gr.Dropdown(
+                    choices=[
+                        "All",
+                        "Fiction",
+                        "Nonfiction",
+                        "Juvenile Fiction",
+                        "History",
+                        "Science",
+                    ],
+                    value="All",
+                    label="Category",
+                    show_label=False,
+                )
+            with gr.Column(scale=2):
+                tone_dropdown = gr.Dropdown(
+                    choices=[
+                        "All",
+                        "Happy",
+                        "Sad",
+                        "Angry",
+                        "Scary",
+                        "Surprising",
+                        "Disgusting",
+                        "Neutral",
+                    ],
+                    value="All",
+                    label="Mood",
+                    show_label=False,
+                )
+            with gr.Column(scale=1):
+                search_button = gr.Button("Find recommendations", variant="primary")
+
+        status_output = gr.Markdown("", visible=True)
+
+        book_gallery = gr.Gallery(
+            label="Recommendations",
+            show_label=False,
+            columns=8,
+            rows=1,
+            height="auto",
+            object_fit="contain",
+            elem_classes=["gallery-container"],
         )
-        tone_dropdown = gr.Dropdown(
-            choices=TONES, label="Select an emotional tone:", value="All"
+
+        detail_output = gr.HTML("")
+
+        # Event Handlers
+        search_button.click(
+            fn=search_books,
+            inputs=[query_input, category_dropdown, tone_dropdown],
+            outputs=[book_gallery, full_data_state, status_output],
         )
-        submit_button = gr.Button("Find recommendations", variant="primary")
 
-    gr.Markdown("## Recommendations")
+        query_input.submit(
+            fn=search_books,
+            inputs=[query_input, category_dropdown, tone_dropdown],
+            outputs=[book_gallery, full_data_state, status_output],
+        )
 
-    output_gallery = gr.Gallery(
-        label="Recommended books",
-        columns=8,
-        rows=2,
-        height="auto",
-        allow_preview=True,
-        object_fit="contain",
-    )
-
-    details_output = gr.HTML(label="Book Details")
-
-    # Event handlers
-    submit_button.click(
-        fn=recommend_books,
-        inputs=[user_query, category_dropdown, tone_dropdown],
-        outputs=[output_gallery, results_state],
-    )
-    user_query.submit(
-        fn=recommend_books,
-        inputs=[user_query, category_dropdown, tone_dropdown],
-        outputs=[output_gallery, results_state],
-    )
-
-    # When a book in the gallery is selected, update the details area
-    output_gallery.select(fn=on_select, inputs=[results_state], outputs=details_output)
+        book_gallery.select(
+            fn=on_select,
+            inputs=[full_data_state],
+            outputs=[detail_output],
+        )
 
 if __name__ == "__main__":
-    demo.launch(server_port=7860, allowed_paths=[os.path.dirname(PLACEHOLDER_IMG_ABS)])
+    demo.launch()

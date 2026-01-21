@@ -20,19 +20,27 @@ The "Brain" of the system (`src/models/hybrid_recommender.py`) implements a two-
 *   **Strategy**: Uses `sentence-transformers` to find books that are semantically close to the user's natural language query (e.g., "A dark space opera with AI").
 *   **Abstaction**: The `EmbeddingFactory` (`src/models/llm_utils.py`) allows the system to switch between HuggingFace CPU models and Gemini/OpenAI API models via a simple parameter change in `params.yaml`.
 
-### **3.2 Hybrid Scoring Logic**
-The final rank is calculated using a weighted average of semantic similarity and a "Popularity Proxy" (Ratings):
+### **3.2 Hybrid Scoring & Sorting Logic**
+The system employs a **Context-Aware Ranking Strategy**:
 
-$$Score = (1 - \text{CosineDistance}) + (\frac{\text{AverageRating}}{5.0} \times \text{PopularityWeight})$$
+1.  **Standard Mode**: Weighted average of Semantic Similarity and Popularity.
+    $$Score = (1 - \text{CosineDistance}) + (\frac{\text{AverageRating}}{5.0} \times \text{PopularityWeight})$$
+2.  **Outcome-Based Mode**: When a user selects an emotional tone (e.g., "Joy"), the system sorts candidates by their **Granular Emotion Probability** (0.0 - 1.0) derived from the Tone Analysis stage.
 
-*   **Why?**: This prevents "obscure" semantic matches from overshadowing high-quality, highly-rated classics, resulting in a more user-centric recommendation.
+*   **Why?**: This prevents "obscure" semantic matches from overshadowing high-quality classics, while also allowing users to specifically hunt for "Happy" or "Scary" outcomes.
 
-## 4. Zero-Shot Data Enrichment
-To solve the **"Semantic Drift"** issue (where keyword similarity causes irrelevant results), we introduced an offline enrichment stage (`src/components/data_enrichment.py`).
+## 4. Enrichment & Tone Analysis
+To solve the **"Semantic Drift"** issue and provide emotional intelligence, we introduced two offline enrichment stages.
 
-*   **Technology**: BART-Large-MNLI (Zero-Shot Classification).
-*   **Implementation**: Descriptions are classified into 7 broad facets (*Fiction, Science, History*, etc.) without requiring specific training data.
-*   **Integration**: The `HybridRecommender` supports `category_filter`, allowing the UI to "narrow down" results using these high-quality facets.
+### **4.1 Zero-Shot Classification (`src/components/data_enrichment.py`)**
+*   **Technology**: BART-Large-MNLI.
+*   **Goal**: Faceted categorization (7 classes like *Fiction, Science*).
+*   **Result**: Allows users to filter broad genres.
+
+### **4.2 Granular Tone Analysis (`src/components/tone_analysis.py`)**
+*   **Technology**: DistilRoBERTa (Emotion Classification).
+*   **Implementation**: Splits descriptions into sentences, classifying each into 7 emotions (Joy, Fear, Sadness, etc.), and aggregating the mean probability.
+*   **Result**: Enables "Sort by Mood" functionality, where books are ranked by how strongly they evoke a specific emotion.
 
 ## 5. MLOps & Reproducibility (DVC)
 The entire development lifecycle is orchestrated using **Data Version Control (DVC)**.

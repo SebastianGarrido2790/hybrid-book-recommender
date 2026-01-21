@@ -118,6 +118,12 @@ class HybridRecommender:
                     if tone_filter and tone_filter.lower() != str(tone).lower():
                         continue
 
+                    # --- TONE PROBABILITIES ---
+                    # If a tone filter is applied, we want to capture its specific probability for sorting.
+                    tone_prob = 0.0
+                    if tone_filter and tone_filter in book_row:
+                        tone_prob = float(book_row.get(tone_filter, 0.0))
+
                     rating = float(book_row.get("average_rating", 0))
                     ratings_count = int(book_row.get("ratings_count", 0))
 
@@ -135,8 +141,10 @@ class HybridRecommender:
                             "description": doc.metadata.get("description"),
                             "category": category,
                             "tone": tone,
+                            "tone_prob": tone_prob,
                             "rating": rating,
                             "ratings_count": ratings_count,
+                            "thumbnail": book_row.get("thumbnail"),
                             "score": hybrid_score,
                             "match_reason": "Hybrid Match",
                         }
@@ -145,8 +153,15 @@ class HybridRecommender:
                 logger.warning(f"Skipping book due to error: {e}")
                 continue
 
-        # 3. Sort by Hybrid Score
-        recommendations = sorted(
-            recommendations, key=lambda x: x["score"], reverse=True
-        )
+        # 3. Sort logic
+        # If a tone is selected, prioritized by probability as requested.
+        # Otherwise, use the standard hybrid score.
+        if tone_filter:
+            recommendations = sorted(
+                recommendations, key=lambda x: x["tone_prob"], reverse=True
+            )
+        else:
+            recommendations = sorted(
+                recommendations, key=lambda x: x["score"], reverse=True
+            )
         return recommendations[:top_k]

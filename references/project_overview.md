@@ -11,7 +11,7 @@ The system adopts a **Hybrid Inference Architecture** that integrates two distin
 
 ### **The High-Level Architecture**
 
-This system operates on two parallel tracks that converge at the inference layer (Streamlit/API).
+This system operates on two parallel tracks that converge at the inference layer (Gradio/API).
 
   * **Track A (Traditional):** `Ratings Matrix` $\rightarrow$ `CSR Matrix` $\rightarrow$ `KNN Model`.
   * **Track B (GenAI):** `Book Metadata` $\rightarrow$ `LLM Processing (Zero-shot/Sentiment)` $\rightarrow$ `Embeddings` $\rightarrow$ `Vector DB`.
@@ -31,7 +31,7 @@ The project is strictly governed by four non-functional requirements to ensure p
 * **Orchestration & Versioning:** DVC, Git, MLflow
 * **Machine Learning:** Scikit-Learn, LangChain, Gemini API (LLM), Hugging Face Transformers (Open-Source LLMs)
 * **Deployment:** Docker, AWS (EC2), GitHub Actions
-* **Interface:** Streamlit
+* **Interface:** Gradio
 
 ---
 
@@ -123,7 +123,7 @@ We will write a `Dockerfile` that:
 2.  Installs `uv`.
 3.  Copies `pyproject.toml` and `uv.lock`.
 4.  Runs `uv sync` to install dependencies.
-5.  Exposes port 8501 (Streamlit).
+5.  Exposes port 7860 (Gradio default).
 
 ### AWS & CI/CD
 
@@ -187,7 +187,7 @@ By the end of this project, you will have:
 
 1.  **The Codebase:** A clean, modular Python package managed by UV.
 2.  **The Artifacts:** Versioned datasets and trained models (KNN `.pkl` and ChromaDB index) tracked by DVC.
-3.  **The Application:** A Streamlit interface running inside a Docker container.
+3.  **The Application:** A Gradio interface running inside a Docker container.
 4.  **The API:** An interface that accepts a User ID or a Search Query and returns a list of ISBNs.
 5.  **The Documentation:** A `README.md` and inline comments explaining the *architectural decisions* (The "Why").
 6.  **The Dashboard:** An MLflow server (local or hosted) showing your experiment history.

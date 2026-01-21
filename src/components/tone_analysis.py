@@ -54,11 +54,10 @@ class ToneAnalysis:
             )
 
             book_dominant_tones = []
+            emotion_scores_list = []
 
             logger.info("Processing books using Sentence-Level Analysis...")
 
-            # We process book-by-book to handle sentence-to-book mapping easily
-            # Optimizing for accuracy and nuance as requested by the user.
             for idx, row in tqdm(
                 df.iterrows(), total=len(df), desc="Analyzing Books (Sentence-Level)"
             ):
@@ -67,11 +66,12 @@ class ToneAnalysis:
 
                 if not sentences:
                     book_dominant_tones.append("neutral")
+                    emotion_scores_list.append(
+                        {emotion: 0.0 for emotion in self.config.target_emotions}
+                    )
                     continue
 
-                # Classify all sentences in the description at once
                 try:
-                    # Limit to first 20 sentences to avoid explosion on extremely long texts
                     sentences = sentences[:20]
                     results = classifier(sentences)
                 except Exception as e:
@@ -79,9 +79,11 @@ class ToneAnalysis:
                         f"Error classifying sentences for book '{row.get('title')}': {e}. Falling back to neutral."
                     )
                     book_dominant_tones.append("neutral")
+                    emotion_scores_list.append(
+                        {emotion: 0.0 for emotion in self.config.target_emotions}
+                    )
                     continue
 
-                # Aggregate probabilities for each emotion across all sentences
                 emotion_sums = {emotion: 0.0 for emotion in self.config.target_emotions}
                 num_sentences = len(results)
 
@@ -92,14 +94,12 @@ class ToneAnalysis:
                         if label in emotion_sums:
                             emotion_sums[label] += score
 
-                # Calculate average probability
                 emotion_averages = {
                     label: score / num_sentences
                     for label, score in emotion_sums.items()
                 }
+                emotion_scores_list.append(emotion_averages)
 
-                # Selection Strategy: Determine the "representative vibe"
-                # Find the top non-neutral emotion
                 non_neutral_averages = {
                     label: score
                     for label, score in emotion_averages.items()
@@ -110,15 +110,16 @@ class ToneAnalysis:
                 )
                 top_non_neutral_score = non_neutral_averages[top_non_neutral]
 
-                # If the top non-neutral emotion is significant (> 0.15 average), we pick it
-                # Even if neutral as a whole is higher, because neutral sentences are common noise.
                 if top_non_neutral_score > 0.15:
                     book_dominant_tones.append(top_non_neutral)
                 else:
-                    # If everything else is very weak, it's truly a neutral book
                     book_dominant_tones.append("neutral")
 
+            # Add columns to dataframe
             df["dominant_tone"] = book_dominant_tones
+            scores_df = pd.DataFrame(emotion_scores_list)
+            for col in scores_df.columns:
+                df[col] = scores_df[col]
 
             logger.info(f"Saving refined toned data to {self.config.output_path}")
             df.to_csv(self.config.output_path, index=False)

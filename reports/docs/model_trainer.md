@@ -76,7 +76,7 @@ documents.append(Document(page_content=content, metadata=metadata))
 ```
 
 * **The Logic:** The embedding model **ignores** this dictionary. It is purely for the **Frontend**.
-* **Why we do this:** Vector Databases store two things: the **Math** (Vector) and the **Facts** (Metadata). When you search for "Space War", the DB finds the vector, but returns this metadata object so your Streamlit app can instantly show the book title and cover image without needing to look up the ISBN in a separate CSV file.
+* **Why we do this:** Vector Databases store two things: the **Math** (Vector) and the **Facts** (Metadata). When you search for "Space War", the DB finds the vector, but returns this metadata object so your Gradio app can instantly show the book title and cover image without needing to look up the ISBN in a separate CSV file.
 
 #### **Step 3: The Database Reset (Lines 123–131)**
 
@@ -107,7 +107,7 @@ vector_store.add_documents(batch)
 
 ## **3. How Retrieval Works (The "Why")**
 
-By structuring our data this way in the Trainer, the **Frontend (Streamlit)** code becomes incredibly simple. We do **not** need to parse strings or split ISBNs from descriptions.
+By structuring our data this way in the Trainer, the **Frontend (Gradio)** code becomes incredibly simple. We do **not** need to parse strings or split ISBNs from descriptions.
 
 **The Retrieval Flow:**
 

@@ -37,7 +37,7 @@ Following this evaluation, the Tone Analysis is deemed **Production Ready**.
 
 1.  **Vibe Filtering**: Users can now search for "A dark and scary sci-fi novel" and the system can automatically filter by **Tone: Fear** + **Category: Fiction**.
 2.  **Emotional Contrast**: The recommender can now explain *why* a book was chosen (e.g., "Matched for its Joyful tone").
-3.  **UI Faceting**: The Streamlit dashboard will include a "Mood" selector, giving users a more human-centered search experience.
+3.  **UI Faceting**: The Gradio dashboard will include a "Mood" selector, giving users a more human-centered search experience.
 
 ## 5. Conclusion
 The Tone Analysis stage adds a sophisticated emotional layer to our Hybrid Recommender. By understanding the *atmosphere* of a book through its description, we move from raw data retrieval to curated discovery. The model is efficient (Batch processing ~15 mins on CPU) and provides actionable metadata that distinguishes this recommender from standard keyword-based systems.

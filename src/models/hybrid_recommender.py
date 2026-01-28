@@ -74,14 +74,16 @@ class HybridRecommender:
         )
 
         # 1. Semantic Search (Fetch more to allow for filtering)
-        # Increase fetch buffer if multiple filters are applied
-        fetch_multiplier = 3
-        if category_filter:
-            fetch_multiplier += 2
-        if tone_filter:
-            fetch_multiplier += 2
+        # Increase fetch buffer if filters are applied to find matches in the long tail.
+        # Since ChromaDB metadata might not match the specific filters (categories/tone), we rely on post-filtering.
+        # We need a large window to ensure we find enough candidates that match both semantic relevance and the hard filters.
+        fetch_multiplier = 5
+        if category_filter or tone_filter:
+            fetch_multiplier = 50
 
         fetch_k = top_k * fetch_multiplier
+        logger.info(f"Fetching {fetch_k} candidates from VectorDB for filtering...")
+
         results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
 
         recommendations = []

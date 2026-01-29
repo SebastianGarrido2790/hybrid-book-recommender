@@ -160,3 +160,24 @@ class InferenceConfig:
     collection_name: str
     top_k: int
     popularity_weight: float
+
+
+@dataclass(frozen=True)
+class ModelEvaluationConfig:
+    """
+    Configuration for the Model Evaluation stage (MLflow tracking).
+
+    Attributes:
+        root_dir (Path): Root directory for evaluation artifacts.
+        data_path (Path): Path to the validation/test data.
+        model_path (Path): Path to the persisted model/VectorDB.
+        all_params (dict): All parameters to be logged to MLflow.
+        mlflow_uri (str): URI for the MLflow tracking server.
+    """
+
+    root_dir: Path
+    data_path: Path
+    model_path: Path
+    all_params: dict
+    mlflow_uri: str
+    experiment_name: str

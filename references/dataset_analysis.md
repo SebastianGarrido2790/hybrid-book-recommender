@@ -45,7 +45,7 @@ Based on our current progress of the pipeline(`src\pipeline\stage_03_transformat
 | **Text Cleaning** | ✅ **Done** | `src/components/data_validation.py` (Removes brackets, drops short text). |
 | **KNN Pivot** | ❌ **Not Done** | *N/A* (See below). |
 | **LLM Augmentation** | ❌ **Not Done** | *N/A* (Skipped for now). |
-| **Zero-Shot Classif.** | ❌ **Not Done** | *N/A* (Skipped for now). |
+| **Zero-Shot Classif.** | ✅ **Done** | `src/components/data_enrichment.py` (Uses BART-Large-MNLI). |
 
 ---
 
@@ -85,8 +85,3 @@ We have effectively streamlined the "Complex Transformation" out of the critical
 4. **Stage 04 (Next):** **Model Training (Embeddings)**.
 * Instead of "Augmenting" text, we simply **Embed** the cleaned text. This gives us 80% of the value with 20% of the effort.
 
----
-
-#### **Next Step:** 
-
-We should move directly to **Stage 04: Model Training (The Factory)** to build the Vector Database. This is where the "LLM Magic" actually happens.

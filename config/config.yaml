@@ -34,3 +34,8 @@ model_trainer:
   root_dir: artifacts/model_trainer
   data_path: artifacts/data_transformation/train.csv
   db_path: artifacts/model_trainer/vectordb
+
+model_evaluation:
+  root_dir: artifacts/model_evaluation
+  data_path: artifacts/data_transformation/test.csv
+  model_path: artifacts/model_trainer/vectordb

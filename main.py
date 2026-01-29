@@ -3,17 +3,16 @@ This module acts as the entry point for the hybrid book recommender system.
 It orchestrates the project's pipeline stages in order for debugging and testing to be easier.
 """
 
-from src.utils.logger import get_logger, log_spacer
-
-# Initialize logger with headline BEFORE importing stages
-# This ensures "main.py" is the recorded headline for this process
-logger = get_logger(headline="main.py")
-
 from src.pipeline.stage_01_ingestion import DataIngestionTrainingPipeline
 from src.pipeline.stage_02_validation import DataValidationTrainingPipeline
 from src.pipeline.stage_03_transformation import DataTransformationTrainingPipeline
 from src.pipeline.stage_04_training import ModelTrainingPipeline
 from src.pipeline.stage_05_prediction import PredictionPipeline
+from src.pipeline.stage_06_evaluation import ModelEvaluationPipeline
+from src.utils.logger import get_logger, log_spacer
+
+# Initialize logger with headline
+logger = get_logger(headline="main.py")
 
 
 # 1. Data Ingestion
@@ -60,6 +59,16 @@ log_spacer()
 try:
     prediction = PredictionPipeline()
     prediction.main()
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+log_spacer()
+
+# 6. Model Evaluation
+try:
+    model_evaluation = ModelEvaluationPipeline()
+    model_evaluation.main()
 except Exception as e:
     logger.exception(e)
     raise e

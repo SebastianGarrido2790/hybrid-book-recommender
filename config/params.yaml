@@ -33,4 +33,9 @@ tone_analysis:
   model_name: j-hartmann/emotion-english-distilroberta-base
   batch_size: 32
   target_emotions: ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
+
+mlflow:
+  uri: https://dagshub.com/SebastianGarrido2790/hybrid-book-recommender.mlflow  # Replace with your MLflow tracking URI
+  experiment_name: Hybrid-Book-Recommender-System  # Replace with your experiment name
+
   

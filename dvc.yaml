@@ -58,3 +58,18 @@ stages:
         - inference.popularity_weight
     outs:
       - artifacts/prediction/results.txt
+
+  model_evaluation:
+    cmd: python -m src.pipeline.stage_06_evaluation
+    deps:
+      - src/pipeline/stage_06_evaluation.py
+      - config/config.yaml
+      - artifacts/data_transformation/test.csv
+      - artifacts/model_trainer/vectordb
+    params:
+      - config/params.yaml:
+        - mlflow.uri
+        - mlflow.experiment_name
+    metrics:
+      - artifacts/model_evaluation/metrics.json:
+          cache: false

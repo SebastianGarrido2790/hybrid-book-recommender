@@ -15,6 +15,7 @@ from src.entity.config_entity import (
     ToneAnalysisConfig,
     ModelTrainerConfig,
     InferenceConfig,
+    ModelEvaluationConfig,
 )
 from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
 from pathlib import Path
@@ -218,3 +219,26 @@ class ConfigurationManager:
         )
 
         return inference_config
+
+    def get_model_evaluation_config(self) -> ModelEvaluationConfig:
+        """
+        Creates the Model Evaluation configuration entity.
+
+        Returns:
+            ModelEvaluationConfig: Configuration object for model evaluation and MLflow tracking.
+        """
+        config = self.config.model_evaluation
+        params = self.params
+
+        create_directories([config.root_dir])
+
+        model_evaluation_config = ModelEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            data_path=Path(config.data_path),
+            model_path=Path(config.model_path),
+            all_params=params,
+            mlflow_uri=params.mlflow.uri,
+            experiment_name=params.mlflow.experiment_name,
+        )
+
+        return model_evaluation_config

@@ -112,3 +112,7 @@ logs/
 
 # Gemini
 GEMINI.md
+
+# MLflow Tracking
+mlruns/
+mlflow.db

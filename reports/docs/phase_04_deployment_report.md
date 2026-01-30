@@ -50,6 +50,9 @@ An automated pipeline has been established to guard the `main` branch against br
     3.  **Automated Testing:** Executes the unit test suite (`pytest`). The build **fails** if logic is broken.
     4.  **Build Verification:** Attempts to build the Docker image (`docker build .`). This ensures that the application is always packaging-ready.
 
+#### **Docker Logic**
+Wrapped the build command in a conditional check (`if docker info ...`). This ensures the step won't crash if the Docker daemon isn't available (common in some local runners), but will still execute on the standard GitHub Actions runner.
+
 This file is an Insurance Policy. It guarantees that:
 
 1. The code works on a clean machine (not just "on my machine").

@@ -1,9 +1,20 @@
+"""
+Unit tests for the HybridRecommender class using pytest.
+
+This module validates the core recommendation logic, ensuring that:
+1. Hybrid scoring math is correct (combining semantic distance and popularity).
+2. Filtering mechanisms (Categories) work efficiently.
+3. External dependencies (ChromaDB, Google/HuggingFace APIs) are mocked to ensure
+   tests are fast, deterministic, and runnable in CI/CD environments without API keys.
+"""
+
 import pytest
 import pandas as pd
 from unittest.mock import MagicMock, patch
 from src.entity.config_entity import InferenceConfig
 from src.models.hybrid_recommender import HybridRecommender
 from src.utils.paths import PROJECT_ROOT
+
 
 # --- Fixtures ---
 

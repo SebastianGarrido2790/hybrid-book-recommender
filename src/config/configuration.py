@@ -45,7 +45,13 @@ class ConfigurationManager:
 
         # DVC API expects paths relative to the project root
         rel_params_path = os.path.relpath(params_filepath, PROJECT_ROOT)
-        self.params = ConfigBox(dvc.api.params_show(rel_params_path))
+
+        try:
+            params_dict = dvc.api.params_show(rel_params_path)
+            self.params = ConfigBox(params_dict)
+        except Exception:
+            # Fallback for production/Docker environments without .git/.dvc
+            self.params = read_yaml(params_filepath)
 
         create_directories([self.config.artifacts_root])
 

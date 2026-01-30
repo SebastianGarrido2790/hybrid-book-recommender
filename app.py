@@ -211,4 +211,8 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Semantic book recommender") as de
     output_gallery.select(fn=on_select, inputs=[results_state], outputs=details_output)
 
 if __name__ == "__main__":
-    demo.launch(server_port=7860, allowed_paths=[os.path.dirname(PLACEHOLDER_IMG_ABS)])
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        allowed_paths=[os.path.dirname(PLACEHOLDER_IMG_ABS)],
+    )

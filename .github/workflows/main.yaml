@@ -3,36 +3,96 @@ name: Hybrid Recommender CI/CD
 on:
   push:
     branches: ["main"]
-  pull_request: # This is crucial for catching bugs before merging code.
+  pull_request:
     branches: ["main"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   test_and_build:
-    # This ensures our code runs on a clean standard OS, not just on your local Windows machine.
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 # This downloads your code to the runner.
+        uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5 # This installs the 'uv' package manager.
+        uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true # This saves downloaded packages between runs.
+          enable-cache: true
 
       - name: Set up Python
-        run: uv python install 3.11 # This ensures we use the same Python version as local.
+        run: uv python install 3.11
 
       - name: Install Dependencies
-        run: uv sync --frozen # This installs the exact dependencies from uv.lock.
+        run: uv sync --frozen
 
       - name: Run Unit Tests
         run: uv run pytest src/tests -v # This runs the tests we wrote in Phase 4.
 
-      - name: Verify Docker Build # This checks if the container can be built.
-        run: |
-          if docker info > /dev/null 2>&1; then
-             docker build . -t hybrid-recommender:latest # This checks if the container can be built.
-          else
-             echo "Docker engine is not running. Skipping build verification."
-          fi
+      # --- CI/CD: Docker Build & Push ---
+      # 1. Authenticate with GitHub Container Registry (GHCR)
+      # Uses the automatic GITHUB_TOKEN so no manual password is needed.
+      - name: Log in to the Container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 2. Generate Metadata
+      # Automatically creates tags (e.g., 'latest', 'sha-123') and OCI labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=latest
+
+      # 3. Build & Push
+      # Uses the official Docker Buildx builder.
+      # 'push: true' sends the image to GHCR only if we are on the main branch.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }} # Only push on merge to main
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: test_and_build
+    if: github.ref == 'refs/heads/main' # Only deploy from main branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }} # e.g., 'ubuntu'
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Login to Registry matching the repo owner
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 2. Pull the specific image
+            # Note: We lowercase the repo name to ensure Docker tag compatibility
+            IMAGE="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]'):latest"
+            docker pull $IMAGE
+
+            # 3. Stop old container
+            docker stop hybrid-recommender || true
+            docker rm hybrid-recommender || true
+
+            # 4. Run new container
+            docker run -d --name hybrid-recommender -p 7860:7860 --restart always $IMAGE
+
+            # 5. Cleanup
+            docker image prune -f

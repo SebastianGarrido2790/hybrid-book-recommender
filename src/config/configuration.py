@@ -5,7 +5,7 @@ It centralizes the loading of 'config.yaml' and 'params.yaml', providing strictl
 
 import dvc.api
 from box import ConfigBox
-from src.constants import *
+
 from src.utils.common import read_yaml, create_directories
 from src.entity.config_entity import (
     DataIngestionConfig,
@@ -19,6 +19,7 @@ from src.entity.config_entity import (
 )
 from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
 from pathlib import Path
+from src.utils.mlflow_config import get_mlflow_uri
 
 
 class ConfigurationManager:
@@ -243,7 +244,7 @@ class ConfigurationManager:
             data_path=Path(config.data_path),
             model_path=Path(config.model_path),
             all_params=params,
-            mlflow_uri=params.mlflow.uri,
+            mlflow_uri=get_mlflow_uri(),  # Uses robust logic (Env > Staging > Yaml)
             experiment_name=params.mlflow.experiment_name,
         )
 

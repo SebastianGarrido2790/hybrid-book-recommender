@@ -48,10 +48,14 @@ An automated pipeline has been established to guard the `main` branch against br
     1.  **Environment Setup:** Installs Python 3.12 and `uv`.
     2.  **Dependency Synchronization:** Runs `uv sync --frozen` to install the **exact** dependency versions defined in `uv.lock`.
     3.  **Automated Testing:** Executes the unit test suite (`pytest`). The build **fails** if logic is broken.
-    4.  **Build Verification:** Attempts to build the Docker image (`docker build .`). This ensures that the application is always packaging-ready.
-
-#### **Docker Logic**
-Wrapped the build command in a conditional check (`if docker info ...`). This ensures the step won't crash if the Docker daemon isn't available (common in some local runners), but will still execute on the standard GitHub Actions runner.
+    4.  **Build & Push (CD):**
+        *   **Action:** Uses `docker/build-push-action`.
+        *   **Metadata:** Automatically generates tags (e.g., `latest`).
+        *   **Push:** Pushes the built image to **GitHub Container Registry (GHCR)** *only* if the branch is `main`. This ensures that every merged PR results in a deployable artifact.
+        
+#### **Security & Authorization**
+*   **GHCR Login:** Authenticates using `secrets.GITHUB_TOKEN` (automatic repository secret) to push images securely to the package registry.
+*   **Permissions:** Verified `packages: write` permission for the job.
 
 This file is an Insurance Policy. It guarantees that:
 

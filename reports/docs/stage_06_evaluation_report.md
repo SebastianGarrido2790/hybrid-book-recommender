@@ -13,7 +13,10 @@ The evaluation architecture is designed to capture the "State of the System" at 
 graph TD
     A["artifacts/data_transformation/test.csv"] -->|Input| B(ModelEvaluation Component)
     C["artifacts/model_trainer/vectordb"] -->|Model Path| B
-    D["config/params.yaml"] -->|Full Parameter Set| E(ConfigurationManager)
+    D["config/params.yaml"] -->|Params| E(ConfigurationManager)
+    K[".env"] -->|Env Vars| L["src/utils/mlflow_config.py"]
+    D -.->|Fallback URI| L
+    L -->|Resolved URI| E
     E -->|Creates| F[ModelEvaluationConfig]
     F -->|Injected into| B
     B -->|Logs Params and Metrics| G{MLflow Tracking Server}
@@ -55,7 +58,29 @@ Unlike traditional logging which only tracks model hyperparameters, our implemen
     dvc metrics show
     ```
 
-## 4. Why This is "Robust MLOps"
+## 4. Environment Strategy & Configuration
+
+The system implements a production-grade "Priority Logic" for MLflow tracking, ensuring that development runs do not pollute the production experiment history.
+
+### **Priority Logic**
+The `src/utils/mlflow_config.py` utility determines the tracking URI based on the following precedence:
+1.  **Environment Variable** (`MLFLOW_TRACKING_URI` in `.env`) → **Highest Priority** (Used for Local Development & Docker)
+2.  **Staging Defaults** → Use for staging environments.
+3.  **`params.yaml`** → **Fallback** (Used manually or when env vars are missing).
+
+### **Local vs. Remote (DagsHub)**
+
+| Feature | **Local Server (127.0.0.1:5000)** | **Remote (DagsHub)** |
+| :--- | :--- | :--- |
+| **Visibility** | **Private:** Only visible on the host machine. | **Public/Team:** Visible to the entire team. |
+| **Storage** | **Ephemeral:** Data lost if `./mlruns` is deleted. | **Persistent:** Stored securely in the cloud. |
+| **Use Case** | Debugging, rapid prototyping, breaking changes. | Final model Training, Portfolio showcase, Team sharing. |
+
+### **Implementation Strategy**
+*   **For Development:** Keep `MLFLOW_TRACKING_URI=http://127.0.0.1:5000` active in `.env`. This prevents you from "spamming" the official DagsHub project with broken or experimental runs while you are coding.
+*   **For Production/Showcase:** When you are ready to produce a "Final Model" to show the team, simply comment out the line in `.env` to fallback to the DagsHub URI defined in `params.yaml`.
+
+## 5. Why This is "Robust MLOps"
 
 1.  **Centralized Visibility:**
     Stakeholders can view the results of every experiment via a web UI (Local or DagsHub), eliminating the need to parse raw log files or manually record results in spreadsheets.
@@ -69,7 +94,7 @@ Unlike traditional logging which only tracks model hyperparameters, our implemen
 4.  **Extensibility:**
     The `ModelEvaluation` component is built to be "Metric-Agnostic." As more complex evaluation metrics (e.g., NDCG, MRR, or Silhouette scores) are developed, they can be added to the metrics dictionary and will be automatically tracked without changing the core architectural flow.
 
-## 5. How to View Experiments
+## 6. How to View Experiments
 
 To launch the MLflow User Interface and explore the tracked parameters and metrics, run the following command from the project root:
 

@@ -1,6 +1,14 @@
 """
 This module handles the evaluation stage and MLflow tracking.
 It logs parameters, metrics, and artifacts to MLflow for experiment tracking.
+
+Usage:
+    Run the entire pipeline (including evaluation) with:
+        uv run python main.py
+    Or run only the evaluation stage with:
+        uv run python -m src.pipeline.stage_06_evaluation
+    To view the tracked experiments, you can launch the MLflow UI:
+        uv run mlflow ui
 """
 
 import pandas as pd

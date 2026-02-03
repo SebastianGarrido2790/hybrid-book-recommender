@@ -244,7 +244,7 @@ class ConfigurationManager:
             data_path=Path(config.data_path),
             model_path=Path(config.model_path),
             all_params=params,
-            mlflow_uri=get_mlflow_uri(),  # Uses robust logic (Env > Staging > Yaml)
+            mlflow_uri=get_mlflow_uri(),  # Uses robust logic (Env > Staging > Yaml).
             experiment_name=params.mlflow.experiment_name,
         )
 

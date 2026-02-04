@@ -102,13 +102,17 @@ def format_authors(authors_str):
 # --- UI LOGIC ---
 def recommend_books(query, category, tone):
     if not recommender:
-        return [], []
+        return [], [], "System Error: Recommender not initialized."
 
     cat_filter = None if category == "All" else category
     tone_filter = TONE_MAP.get(tone) if tone != "All" else None
 
     if not query.strip() and not cat_filter and not tone_filter:
-        return [], []
+        return (
+            [],
+            [],
+            "Please enter a search query or select a filter to find recommendations.",
+        )
 
     try:
         results = recommender.recommend(
@@ -116,9 +120,16 @@ def recommend_books(query, category, tone):
         )
     except Exception as e:
         logger.error(f"Recommendation failed: {CustomException(e, sys)}")
-        return [], []
+        return [], [], "An error occurred while finding recommendations."
 
-    results = results[:16]
+    if not results:
+        return (
+            [],
+            [],
+            "### ⚠️ No books found matching your criteria.\n\nTry adjusting the filters or using different keywords in your description.",
+        )
+
+    results = results[:48]
     gallery_items = []
     full_data = []
 
@@ -154,7 +165,7 @@ def recommend_books(query, category, tone):
             }
         )
 
-    return gallery_items, full_data
+    return gallery_items, full_data, ""
 
 
 def on_select(evt: gr.SelectData, data):
@@ -204,11 +215,12 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Semantic book recommender") as de
         submit_button = gr.Button("Find recommendations", variant="primary")
 
     gr.Markdown("## Recommendations")
+    status_output = gr.Markdown()
 
     output_gallery = gr.Gallery(
         label="Recommended books",
         columns=8,
-        rows=2,
+        rows=6,
         height="auto",
         allow_preview=True,
         object_fit="contain",
@@ -220,12 +232,12 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Semantic book recommender") as de
     submit_button.click(
         fn=recommend_books,
         inputs=[user_query, category_dropdown, tone_dropdown],
-        outputs=[output_gallery, results_state],
+        outputs=[output_gallery, results_state, status_output],
     )
     user_query.submit(
         fn=recommend_books,
         inputs=[user_query, category_dropdown, tone_dropdown],
-        outputs=[output_gallery, results_state],
+        outputs=[output_gallery, results_state, status_output],
     )
 
     # When a book in the gallery is selected, update the details area

@@ -1,5 +1,6 @@
 """
-This file contains utility functions for common tasks.
+Common utility functions for configuration management, directory orchestration,
+and data serialization to support reproducible MLOps pipelines.
 """
 
 import os
@@ -13,6 +14,8 @@ from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
 from typing import Any
+from src.utils.exception import CustomException
+import sys
 
 logger = get_logger(__name__)
 
@@ -43,7 +46,7 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
     except BoxValueError:
         raise ValueError("yaml file is empty")
     except Exception as e:
-        raise e
+        raise CustomException(e, sys)
 
 
 @ensure_annotations

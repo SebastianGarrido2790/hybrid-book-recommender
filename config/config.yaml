@@ -35,6 +35,10 @@ model_trainer:
   data_path: artifacts/data_transformation/train.csv
   db_path: artifacts/model_trainer/vectordb
 
+prediction:
+  root_dir: artifacts/prediction
+  results_file: artifacts/prediction/results.txt
+
 model_evaluation:
   root_dir: artifacts/model_evaluation
   data_path: artifacts/data_transformation/test.csv

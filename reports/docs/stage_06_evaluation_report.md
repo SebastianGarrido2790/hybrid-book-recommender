@@ -103,3 +103,27 @@ uv run mlflow ui
 ```
 
 By default, the UI will be accessible at: `http://127.0.0.1:5000`
+
+## 7. Troubleshooting
+
+### **Common Error: ConnectionRefused**
+If the pipeline fails at **Stage 06** with a `ConnectionRefusedError` (WinError 10061), it typically means the MLflow Tracking Server is not running or not accessible at the configured URI.
+
+**Error Example:**
+```text
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded...
+[WinError 10061] No se puede establecer una conexión...
+```
+
+**Resolution:**
+1.  **Start the MLflow Server:** Ensure the local server is running in a separate terminal:
+    ```powershell
+    uv run mlflow ui --port 5000
+    ```
+2.  **Verify URI:** Check your `.env` file to ensure `MLFLOW_TRACKING_URI` matches the running server (default: `http://127.0.0.1:5000`).
+
+### **Visual Verification**
+A successful connection allows you to view the experiment dashboard:
+
+![MLflow UI Dashboard](../figures/mlflow_ui.png)
+*Figure 1: The MLflow UI Dashboard showing successful experiment runs.*

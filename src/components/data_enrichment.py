@@ -12,8 +12,10 @@ import pandas as pd
 from tqdm import tqdm
 from transformers import pipeline
 import torch
+import sys
 from src.entity.config_entity import DataEnrichmentConfig
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
 logger = get_logger(__name__)
 
@@ -22,6 +24,10 @@ class DataEnrichment:
     """
     Component for enriching book metadata using Zero-Shot Classification.
     Standardizes messy categories into a few broad, usable facets.
+
+    Attributes:
+        config (DataEnrichmentConfig): Configuration entity containing data paths,
+            model name, and batch size for the enrichment process.
     """
 
     def __init__(self, config: DataEnrichmentConfig):
@@ -30,6 +36,15 @@ class DataEnrichment:
     def initiate_data_enrichment(self):
         """
         Executes the enrichment process.
+
+        This method performs the following steps:
+        1. Reads the cleaned book dataset from the specified path.
+        2. Initializes the Zero-Shot Classification model.
+        3. Enriches the dataset with broad categories based on book descriptions.
+        4. Saves the enriched dataset to a new CSV file.
+
+        Raises:
+            CustomException: If any error occurs during the enrichment process.
         """
         try:
             logger.info(f"Loading data from {self.config.data_path}")
@@ -79,5 +94,4 @@ class DataEnrichment:
             logger.info("✅ Data enrichment completed successfully.")
 
         except Exception as e:
-            logger.error(f"Error during data enrichment: {e}")
-            raise e
+            raise CustomException(e, sys)

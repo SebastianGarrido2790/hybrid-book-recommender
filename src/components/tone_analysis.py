@@ -1,3 +1,8 @@
+"""
+This module serves as the 'Worker' for the Tone Analysis Stage of the pipeline.
+It handles the extraction of emotional tone from book descriptions using a pre-trained Transformer model.
+"""
+
 import pandas as pd
 from tqdm import tqdm
 from transformers import pipeline
@@ -5,6 +10,8 @@ import torch
 import re
 from src.entity.config_entity import ToneAnalysisConfig
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 logger = get_logger(__name__)
 
@@ -12,7 +19,10 @@ logger = get_logger(__name__)
 class ToneAnalysis:
     """
     Enhanced Component for Metadata Enrichment using Sentence-Level Tone Analysis.
-    Captures nuance by splitting descriptions into sentences and aggregating emotional scores.
+
+    This class captures emotional nuance by splitting book descriptions into individual sentences,
+    analyzing the emotional tone of each sentence using a Transformer model, and then
+    aggregating these scores to determine the dominant tone of the book.
     """
 
     def __init__(self, config: ToneAnalysisConfig):
@@ -31,6 +41,18 @@ class ToneAnalysis:
     def initiate_tone_analysis(self):
         """
         Executes the sentence-level tone analysis process.
+
+        Flow:
+        1. Loads the enriched data.
+        2. Initializes the Hugging Face emotion classification pipeline.
+        3. Iterates through each book, splitting descriptions into sentences.
+        4. Classifies each sentence to get emotion scores (e.g., joy, sadness, fear).
+        5. Aggregates scores to calculate the average emotion profile for the book.
+        6. Determines the dominant tone based on the highest non-neutral score.
+        7. Saves the dataset with new columns: 'dominant_tone' and individual emotion scores.
+
+        Raises:
+            CustomException: If any error occurs during the analysis process.
         """
         try:
             logger.info(f"Loading data from {self.config.data_path}")
@@ -127,5 +149,4 @@ class ToneAnalysis:
             logger.info("✅ Sentence-level tone analysis completed successfully.")
 
         except Exception as e:
-            logger.error(f"Error during tone analysis: {e}")
-            raise e
+            raise CustomException(e, sys)

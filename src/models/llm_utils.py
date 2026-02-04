@@ -7,6 +7,8 @@ import os
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 logger = get_logger(__name__)
 
@@ -29,22 +31,25 @@ class EmbeddingFactory:
         Returns:
             Embeddings: A LangChain Embeddings interface.
         """
-        provider = provider.lower()
+        try:
+            provider = provider.lower()
 
-        if provider == "huggingface":
-            logger.info(f"Using HuggingFace Embeddings: {model_name}")
-            return HuggingFaceEmbeddings(model_name=model_name)
-        elif provider == "gemini":
-            api_key = os.getenv("GOOGLE_API_KEY")
-            if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found in environment variables. Please check your .env file."
+            if provider == "huggingface":
+                logger.info(f"Using HuggingFace Embeddings: {model_name}")
+                return HuggingFaceEmbeddings(model_name=model_name)
+            elif provider == "gemini":
+                api_key = os.getenv("GOOGLE_API_KEY")
+                if not api_key:
+                    raise ValueError(
+                        "GOOGLE_API_KEY not found in environment variables. Please check your .env file."
+                    )
+                logger.info(f"Using Google Gemini Embeddings: {model_name}")
+                return GoogleGenerativeAIEmbeddings(
+                    model=model_name, google_api_key=api_key
                 )
-            logger.info(f"Using Google Gemini Embeddings: {model_name}")
-            return GoogleGenerativeAIEmbeddings(
-                model=model_name, google_api_key=api_key
-            )
-        else:
-            raise ValueError(
-                f"Unsupported embedding provider: {provider}. Options: 'huggingface', 'gemini'."
-            )
+            else:
+                raise ValueError(
+                    f"Unsupported embedding provider: {provider}. Options: 'huggingface', 'gemini'."
+                )
+        except Exception as e:
+            raise CustomException(e, sys)

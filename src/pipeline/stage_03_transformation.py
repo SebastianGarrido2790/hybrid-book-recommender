@@ -7,6 +7,8 @@ and triggering the DataTransformation component.
 from src.config.configuration import ConfigurationManager
 from src.components.data_transformation import DataTransformation
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 STAGE_NAME = "Data Transformation Stage"
 logger = get_logger(headline=STAGE_NAME)
@@ -26,6 +28,14 @@ class DataTransformationTrainingPipeline:
     def main(self):
         """
         Main execution flow for the Data Transformation stage.
+
+        Flow:
+        1. Load Config.
+        2. Initialize DataTransformation Component.
+        3. Trigger initiate_data_transformation logic.
+
+        Raises:
+            CustomException: If execution fails.
         """
         try:
             logger.info("🚀 Starting Data Transformation Pipeline 🚀")
@@ -43,8 +53,7 @@ class DataTransformationTrainingPipeline:
             logger.info("✅ Data Transformation Pipeline Completed ✅")
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -52,5 +61,4 @@ if __name__ == "__main__":
         obj = DataTransformationTrainingPipeline()
         obj.main()
     except Exception as e:
-        logger.exception(e)
-        raise e
+        raise CustomException(e, sys)

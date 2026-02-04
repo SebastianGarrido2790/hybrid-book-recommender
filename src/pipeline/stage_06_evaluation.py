@@ -6,6 +6,8 @@ It orchestrates the execution of MLflow tracking and metric logging.
 from src.config.configuration import ConfigurationManager
 from src.components.model_evaluation import ModelEvaluation
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 STAGE_NAME = "Model Evaluation Stage"
 logger = get_logger(headline=STAGE_NAME)
@@ -22,6 +24,14 @@ class ModelEvaluationPipeline:
     def main(self):
         """
         Main execution flow for the Model Evaluation stage.
+
+        Flow:
+        1. Load Evaluation Config.
+        2. Initialize ModelEvaluation Component.
+        3. Log parameters and metrics to MLflow.
+
+        Raises:
+            CustomException: If evaluation fails.
         """
         try:
             logger.info("🚀 Starting Model Evaluation Pipeline 🚀")
@@ -39,8 +49,7 @@ class ModelEvaluationPipeline:
             logger.info("✅ Model Evaluation Pipeline Completed ✅")
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -48,5 +57,4 @@ if __name__ == "__main__":
         obj = ModelEvaluationPipeline()
         obj.main()
     except Exception as e:
-        logger.exception(e)
-        raise e
+        raise CustomException(e, sys)

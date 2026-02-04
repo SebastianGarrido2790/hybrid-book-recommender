@@ -18,6 +18,8 @@ from urllib.parse import urlparse
 from src.entity.config_entity import ModelEvaluationConfig
 from src.utils.common import save_json
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 from pathlib import Path
 
 logger = get_logger(__name__)
@@ -25,7 +27,15 @@ logger = get_logger(__name__)
 
 class ModelEvaluation:
     """
-    Handles the logging of experiment details to MLflow.
+    This class is responsible for calculating evaluation metrics, saving them locally,
+    and tracking the experiment using MLflow. It integrates with the project's
+    configuration management to ensure all parameters and results are logged
+    for reproducibility.
+
+    Attributes:
+        config (ModelEvaluationConfig): Configuration entity containing data paths,
+            MLflow tracking URI, and all pipeline parameters.
+
     """
 
     def __init__(self, config: ModelEvaluationConfig):
@@ -34,6 +44,18 @@ class ModelEvaluation:
     def log_into_mlflow(self):
         """
         Logs parameters and basic metrics to MLflow.
+
+        This method performs the following steps:
+        1. Reads the test dataset from the specified path.
+        2. Calculates basic metrics (e.g., number of records).
+        3. Saves these metrics to a local JSON file.
+        4. Configures MLflow tracking, setting the registry URI and experiment name.
+        5. Starts a new MLflow run and logs all pipeline parameters.
+        6. Logs the calculated metrics.
+        7. Handles model logging (currently commented out for ChromaDB integration).
+
+        Raises:
+            CustomException: If any error occurs during the logging process.
         """
         try:
             test_data = pd.read_csv(self.config.data_path)
@@ -85,8 +107,7 @@ class ModelEvaluation:
             logger.info("Successfully logged metrics and parameters to MLflow.")
 
         except Exception as e:
-            logger.exception("Error during model evaluation/MLflow logging")
-            raise e
+            raise CustomException(e, sys)
 
     def _flatten_dict(self, d, parent_key="", sep="_"):
         """Helper to flatten nested config/params dictionaries."""

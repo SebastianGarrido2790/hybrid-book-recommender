@@ -7,6 +7,8 @@ by orchestrating the DataIngestion component.
 from src.config.configuration import ConfigurationManager
 from src.components.data_ingestion import DataIngestion
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 STAGE_NAME = "Data Ingestion Stage"
 logger = get_logger(headline=STAGE_NAME)
@@ -26,6 +28,14 @@ class DataIngestionTrainingPipeline:
     def main(self):
         """
         Main execution flow for the Data Ingestion stage.
+
+        This method:
+        1. Initializes the ConfigurationManager to retrieve ingestion settings.
+        2. Instantiates the DataIngestion component.
+        3. Executes the download and extraction processes.
+
+        Raises:
+            CustomException: If an error occurs during the ingestion process.
         """
         try:
             logger.info("🚀 Starting Ingestion Pipeline 🚀")
@@ -44,8 +54,7 @@ class DataIngestionTrainingPipeline:
             logger.info("✅ Ingestion Pipeline Completed ✅")
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -53,4 +62,4 @@ if __name__ == "__main__":
         obj = DataIngestionTrainingPipeline()
         obj.main()
     except Exception as e:
-        raise e
+        raise CustomException(e, sys)

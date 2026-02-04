@@ -1,16 +1,33 @@
+"""
+Module for testing and validating the accuracy of the Tone Classifier.
+Provides functionality for manual verification (Vibe Check) and statistical visualization
+of the global tone distribution across the dataset.
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import sys
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
-logger = get_logger(__name__, headline="ToneAccuracyTest")
+STAGE_NAME = "Tone Accuracy Test"
+logger = get_logger(headline=STAGE_NAME)
 
 
 def test_tone_accuracy():
     """
     Evaluates the accuracy of the Tone Classifier by performing a 'Vibe Check'
     on a random sample of enriched books and generating a distribution plot.
+
+    Flow:
+    1. Loads toned data.
+    2. Prints a random sample of book titles, tones, and descriptions for manual verification.
+    3. Generates and saves a bar chart of the global tone distribution.
+
+    Raises:
+        CustomException: If test fails.
     """
     try:
         data_path = "artifacts/tone_analysis/toned_books.csv"
@@ -81,8 +98,11 @@ def test_tone_accuracy():
         logger.info(f"Tone distribution plot saved to {plot_path}")
 
     except Exception as e:
-        logger.error(f"Test failed: {e}")
+        raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
-    test_tone_accuracy()
+    try:
+        test_tone_accuracy()
+    except Exception as e:
+        raise CustomException(e, sys)

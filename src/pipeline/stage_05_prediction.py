@@ -4,83 +4,69 @@ It loads the model from the specified configuration and runs a set of test queri
 Results are saved to a text file in the artifacts/prediction directory.
 """
 
+from src.config.configuration import ConfigurationManager
+from src.components.batch_prediction import BatchPrediction
+from src.utils.exception import CustomException
+import sys
 from src.utils.logger import get_logger
 
-# Initialize logger with headline BEFORE importing stages
-# This ensures "stage_05_prediction.py" is the recorded headline for this process
-logger = get_logger(__name__, headline="PredictionPipeline")
-
-from src.config.configuration import ConfigurationManager
-from src.models.hybrid_recommender import HybridRecommender
-from src.utils.paths import PROJECT_ROOT
+STAGE_NAME = "Prediction Pipeline"
+logger = get_logger(headline=STAGE_NAME)
 
 
 class PredictionPipeline:
+    """
+    Encapsulates the logic for the prediction stage of the ML pipeline.
+
+    This stage is responsible for loading the trained HybridRecommender model
+    and running inference on a set of test queries to validate the system's
+    recommendation capabilities.
+    """
+
     def __init__(self):
         pass
 
     def main(self):
+        """
+        Main execution flow for the Prediction Pipeline.
+
+        Loads the HybridRecommender and runs a set of predefined test queries
+        to verify model performance locally.
+
+        Raises:
+            CustomException: If prediction flow fails.
+        """
         try:
             # 1. Load Configuration
             config_manager = ConfigurationManager()
             inference_config = config_manager.get_inference_config()
+            batch_config = config_manager.get_batch_prediction_config()
 
             # 2. Init Component
-            recommender = HybridRecommender(config=inference_config)
+            batch_predictor = BatchPrediction(
+                batch_config=batch_config, inference_config=inference_config
+            )
 
             # Test cases to verify different aspects (semantic vs hybrid)
             queries = [
                 "A cyberpunk novel about artificial intelligence",
                 "A historical fiction about Roman Empire",
-                "A book about learning machine learning",
+                "A book about machine learning",
             ]
 
-            # 3. Define Output Path
-            output_dir = PROJECT_ROOT / "artifacts" / "prediction"
-            output_dir.mkdir(parents=True, exist_ok=True)
-            output_file = output_dir / "results.txt"
-
-            with open(output_file, "w", encoding="utf-8") as f:
-                for query in queries:
-                    logger.info(f"🔍 Testing Query: {query}")
-                    print(f"\n🔍 Query: {query}")
-                    print("-" * 60)
-                    f.write(f"\n🔍 Query: {query}\n")
-                    f.write("-" * 60 + "\n")
-
-                    results = recommender.recommend(query)
-
-                    for i, book in enumerate(results):
-                        print(
-                            f"{i + 1}. {book['title']} | {book['category']} (Rating: {book['rating']}, Score: {book['score']:.3f})"
-                        )
-                        print(f"   Author: {book['authors']}")
-                        # Truncate description for cleaner output
-                        result_line = f"{i + 1}. {book['title']} | {book['category']} (Rating: {book['rating']}, Score: {book['score']:.3f})\n"
-                        f.write(result_line)
-                        f.write(f"   Author: {book['authors']}\n")
-
-                        desc_preview = (
-                            book["description"][:100].replace("\n", " ") + "..."
-                            if book["description"]
-                            else "No description"
-                        )
-                        print(f"   Desc: {desc_preview}")
-                        f.write(f"   Desc: {desc_preview}\n")
-
-            logger.info(f"✅ Results saved to {output_file.relative_to(PROJECT_ROOT)}")
+            # 3. Run Batch Predictions
+            batch_predictor.run_batch_predictions(queries)
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
     try:
-        logger.info("🚀 Prediction Pipeline Started 🚀")
+        logger.info(f"🚀 {STAGE_NAME} Started 🚀")
         obj = PredictionPipeline()
         obj.main()
-        logger.info("✅ Prediction Pipeline Completed ✅")
+        logger.info(f"✅ {STAGE_NAME} Completed ✅")
     except Exception as e:
         logger.exception(e)
-        raise e
+        raise CustomException(e, sys)

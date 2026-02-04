@@ -1,16 +1,34 @@
+"""
+Module for evaluating the broad classification accuracy of the book categorization model.
+This test script compares predicted categories against ground truth by mapping them
+into high-level binary classes (Fiction vs. Non-Fiction) and generating performance metrics.
+"""
+
 import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import sys
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
-logger = get_logger(__name__, headline="BroadAccuracyTest")
+STAGE_NAME = "Broad Accuracy Test"
+logger = get_logger(headline=STAGE_NAME)
 
 
 def test_broad_accuracy():
     """
     Evaluates accuracy using broad masks (Fiction vs Non-Fiction).
+
+    Flow:
+    1. Loads enriched data.
+    2. Maps Ground Truth and Predictions to Binary Classes (Fiction/Non-Fiction).
+    3. Generates Classification Report.
+    4. Plots and saves Confusion Matrix.
+
+    Raises:
+        CustomException: If evaluation fails.
     """
     try:
         df = pd.read_csv("artifacts/data_enrichment/enriched_books.csv")
@@ -68,8 +86,11 @@ def test_broad_accuracy():
         logger.info(f"Broad confusion matrix saved to {plot_path}")
 
     except Exception as e:
-        logger.error(f"Broad test failed: {e}")
+        raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
-    test_broad_accuracy()
+    try:
+        test_broad_accuracy()
+    except Exception as e:
+        raise CustomException(e, sys)

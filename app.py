@@ -1,21 +1,42 @@
+"""
+Main application script for the book recommender system.
+This script initializes the recommender engine, defines UI components,
+and implements the recommendation logic using Gradio.
+
+Usage:
+    uv run python app.py
+"""
+
 import os
 import gradio as gr
 from src.config.configuration import ConfigurationManager
 from src.models.hybrid_recommender import HybridRecommender
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 logger = get_logger(__name__)
 
 
 # --- ENGINE INITIALIZATION ---
 def init_recommender():
+    """
+    Initializes the HybridRecommender engine.
+
+    This function creates a ConfigurationManager to get the inference configuration,
+    initializes the HybridRecommender with this configuration, and handles any
+    exceptions during initialization.
+
+    Returns:
+        HybridRecommender: The initialized recommender engine, or None if initialization fails.
+    """
     try:
         config = ConfigurationManager()
         inference_config = config.get_inference_config()
         recommender = HybridRecommender(config=inference_config)
         return recommender
     except Exception as e:
-        logger.error(f"Failed to initialize recommender: {e}")
+        logger.error(f"Failed to initialize recommender: {CustomException(e, sys)}")
         return None
 
 
@@ -94,7 +115,7 @@ def recommend_books(query, category, tone):
             query=query, category_filter=cat_filter, tone_filter=tone_filter
         )
     except Exception as e:
-        logger.error(f"Recommendation failed: {e}")
+        logger.error(f"Recommendation failed: {CustomException(e, sys)}")
         return [], []
 
     results = results[:16]
@@ -111,7 +132,7 @@ def recommend_books(query, category, tone):
 
         try:
             mood_score = f"{float(tone_prob):.2f}"
-        except:
+        except Exception:
             mood_score = "N/A"
 
         # Caption for Gallery Preview

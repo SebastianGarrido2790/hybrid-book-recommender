@@ -1,17 +1,38 @@
+"""
+Module for evaluating the accuracy of the Zero-Shot Data Enrichment process.
+
+This module performs a quantitative assessment of the enrichment pipeline by:
+1. Mapping original dataset categories to broad target facets (Ground Truth).
+2. Calculating classification metrics including Accuracy and F1-Score.
+3. Generating and saving confusion matrix heatmaps for error analysis.
+"""
+
 import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
-from src.utils.logger import get_logger
 import os
+import sys
+from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
-logger = get_logger(__name__, headline="EnrichmentAccuracyTest")
+STAGE_NAME = "Enrichment Accuracy Test"
+logger = get_logger(headline=STAGE_NAME)
 
 
 def test_enrichment_accuracy():
     """
     Evaluates the accuracy of the Zero-Shot Enricher by comparing predictions
     against a manually mapped 'Ground Truth' from the original dataset.
+
+    Flow:
+    1. Checks if enriched data exists.
+    2. Maps original categories to 'Ground Truth' broad facets.
+    3. Calculates classification metrics (Accuracy, F1-Score).
+    4. Generates and saves a confusion matrix heatmap.
+
+    Raises:
+        CustomException: If evaluation fails.
     """
     try:
         data_path = "artifacts/data_enrichment/enriched_books.csv"
@@ -72,7 +93,7 @@ def test_enrichment_accuracy():
         print("\n" + "=" * 60)
         print("ZERO-SHOT CLASSIFICATION ACCURACY REPORT")
         print("=" * 60)
-        print(f"Comparing: 'categories' (Original) vs 'simple_category' (Zero-Shot)")
+        print("Comparing: 'categories' (Original) vs 'simple_category' (Zero-Shot)")
         print(f"Sample Size: {len(df_test)} books")
         print("-" * 60)
         print(report)
@@ -104,9 +125,11 @@ def test_enrichment_accuracy():
         logger.info("Accuracy test completed.")
 
     except Exception as e:
-        logger.error(f"Test failed: {e}")
-        raise e
+        raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
-    test_enrichment_accuracy()
+    try:
+        test_enrichment_accuracy()
+    except Exception as e:
+        raise CustomException(e, sys)

@@ -10,6 +10,8 @@ from src.pipeline.stage_04_training import ModelTrainingPipeline
 from src.pipeline.stage_05_prediction import PredictionPipeline
 from src.pipeline.stage_06_evaluation import ModelEvaluationPipeline
 from src.utils.logger import get_logger, log_spacer
+from src.utils.exception import CustomException
+import sys
 
 # Initialize logger with headline
 logger = get_logger(headline="main.py")
@@ -20,8 +22,7 @@ try:
     data_ingestion = DataIngestionTrainingPipeline()
     data_ingestion.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)
 
 log_spacer()
 
@@ -30,8 +31,7 @@ try:
     data_validation = DataValidationTrainingPipeline()
     data_validation.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)
 
 log_spacer()
 
@@ -40,8 +40,7 @@ try:
     data_transformation = DataTransformationTrainingPipeline()
     data_transformation.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)
 
 log_spacer()
 
@@ -50,8 +49,7 @@ try:
     model_trainer = ModelTrainingPipeline()
     model_trainer.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)
 
 log_spacer()
 
@@ -60,8 +58,7 @@ try:
     prediction = PredictionPipeline()
     prediction.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)
 
 log_spacer()
 
@@ -70,5 +67,4 @@ try:
     model_evaluation = ModelEvaluationPipeline()
     model_evaluation.main()
 except Exception as e:
-    logger.exception(e)
-    raise e
+    raise CustomException(e, sys)

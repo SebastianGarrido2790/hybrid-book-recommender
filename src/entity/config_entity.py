@@ -163,6 +163,20 @@ class InferenceConfig:
 
 
 @dataclass(frozen=True)
+class BatchPredictionConfig:
+    """
+    Configuration for the Batch Prediction stage.
+
+    Attributes:
+        root_dir (Path): Root directory for prediction artifacts.
+        results_file (Path): Path to save the prediction results.
+    """
+
+    root_dir: Path
+    results_file: Path
+
+
+@dataclass(frozen=True)
 class ModelEvaluationConfig:
     """
     Configuration for the Model Evaluation stage (MLflow tracking).

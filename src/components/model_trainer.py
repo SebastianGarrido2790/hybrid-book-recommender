@@ -13,6 +13,8 @@ from src.models.llm_utils import EmbeddingFactory
 from langchain_core.documents import Document
 from src.entity.config_entity import ModelTrainerConfig
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 # Load environment variables (API Keys)
 load_dotenv()
@@ -25,6 +27,10 @@ class ModelTrainer:
     This class handles the creation of the semantic search engine.
     It reads the cleaned dataset, generates embeddings via a configurable provider (HuggingFace or Gemini),
     and persists them into a ChromaDB vector store.
+
+    Attributes:
+        config (ModelTrainerConfig): Configuration entity containing data paths,
+            model name, and batch size for the enrichment process.
     """
 
     def __init__(self, config: ModelTrainerConfig):
@@ -47,6 +53,9 @@ class ModelTrainer:
         2. Converts rows into LangChain 'Document' objects with rich context.
         3. Initializes the Embedding model (Provider agnostic).
         4. Resets and repopulates the ChromaDB collection.
+
+        Raises:
+            CustomException: If any error occurs during the training process.
         """
         try:
             logger.info("--- Loading Data ---")
@@ -165,5 +174,4 @@ class ModelTrainer:
             )
 
         except Exception as e:
-            logger.exception("Error during model training/embedding generation")
-            raise e
+            raise CustomException(e, sys)

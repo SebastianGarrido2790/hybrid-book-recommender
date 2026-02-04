@@ -7,6 +7,8 @@ and triggering the ModelTrainer component.
 from src.config.configuration import ConfigurationManager
 from src.components.model_trainer import ModelTrainer
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 STAGE_NAME = "Model Training Stage"
 logger = get_logger(headline=STAGE_NAME)
@@ -26,6 +28,14 @@ class ModelTrainingPipeline:
     def main(self):
         """
         Main execution flow for the Model Training stage.
+
+        Flow:
+        1. Load Training Configuration.
+        2. Initialize ModelTrainer Component.
+        3. Trigger Model Training (Embedding generation + Indexing).
+
+        Raises:
+            CustomException: If training fails.
         """
         try:
             logger.info("🚀 Starting Model Training Pipeline 🚀")
@@ -43,8 +53,7 @@ class ModelTrainingPipeline:
             logger.info("✅ Model Training Pipeline Completed ✅")
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -52,5 +61,4 @@ if __name__ == "__main__":
         obj = ModelTrainingPipeline()
         obj.main()
     except Exception as e:
-        logger.exception(e)
-        raise e
+        raise CustomException(e, sys)

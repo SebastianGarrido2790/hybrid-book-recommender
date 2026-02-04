@@ -3,9 +3,11 @@ This module serves as the 'Worker' for the Data Validation Stage of the pipeline
 It handles the data cleaning and validation process to ensure data quality.
 """
 
+import sys
 import pandas as pd
 from src.entity.config_entity import DataValidationConfig
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
 logger = get_logger(__name__)
 
@@ -88,5 +90,4 @@ class DataValidation:
             return validation_status
 
         except Exception as e:
-            logger.exception("Error during data validation")
-            raise e
+            raise CustomException(e, sys)

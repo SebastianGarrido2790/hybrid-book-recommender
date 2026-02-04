@@ -3,19 +3,21 @@
 # Goal Description
 Build a modern, interactive web interface using **Gradio** to serve as the "Storefront" for the Hybrid Book Recommender. The UI will allow users to perform natural language searches, filter by category and emotional tone, and view results with a premium, AI-driven aesthetic.
 
-## User Review Required
-> [!IMPORTANT]
+## User Review
+> **IMPORTANT**
+>
 > **Framework Switch**: We are switching from Streamlit to **Gradio** (using the `Blocks` API) to better align with the goal of showcasing ML models.
+>
 > **Dependency**: This requires adding `gradio` to our `pyproject.toml`.
 
-## Proposed Changes
+## Implementation
 
 ### Dependencies
-#### [MODIFY] [pyproject.toml](hybrid-book-recommender/pyproject.toml)
+[pyproject.toml](hybrid-book-recommender/pyproject.toml)
 - Add `gradio>=4.0.0`.
 
-### UI Implementation
-#### [NEW] [app.py](hybrid-book-recommender/app.py)
+### UI
+[app.py](hybrid-book-recommender/app.py)
 - **Engine Initialization**: Load `ConfigurationManager` and `HybridRecommender`.
 - **Layout (Gradio Blocks)**:
     - **Header**: Project title and description with SVG icon.
@@ -28,7 +30,7 @@ Build a modern, interactive web interface using **Gradio** to serve as the "Stor
         - `Markdown`: Results container (Iterative card display).
 - **Styling**: Inject vanilla CSS into `gr.Blocks(css=...)` to achieve a dark-mode, glassmorphism aesthetic.
 
-## Verification Plan
+## Verification
 
 ### Automated Tests
 - No automated tests for the UI, but we will verify the console logs for engine initialization.

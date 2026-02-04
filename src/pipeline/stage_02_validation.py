@@ -7,6 +7,8 @@ by orchestrating the DataValidation component.
 from src.config.configuration import ConfigurationManager
 from src.components.data_validation import DataValidation
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
+import sys
 
 STAGE_NAME = "Data Validation Stage"
 logger = get_logger(headline=STAGE_NAME)
@@ -25,10 +27,14 @@ class DataValidationTrainingPipeline:
         """
         Executes the main steps of the Data Validation pipeline.
 
+        Flow:
         1. Initialize ConfigurationManager.
         2. Retrieve DataValidationConfig.
         3. Instantiate DataValidation component.
         4. Execute validate_and_clean_data method.
+
+        Raises:
+            CustomException: If any error occurs during validation.
         """
         try:
             logger.info("🚀 Starting Validation Pipeline 🚀")
@@ -41,8 +47,7 @@ class DataValidationTrainingPipeline:
 
             logger.info("✅ Validation Pipeline Completed ✅")
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -50,5 +55,4 @@ if __name__ == "__main__":
         obj = DataValidationTrainingPipeline()
         obj.main()
     except Exception as e:
-        logger.exception(e)
-        raise e
+        raise CustomException(e, sys)

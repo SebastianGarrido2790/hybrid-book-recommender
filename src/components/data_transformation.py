@@ -4,9 +4,11 @@ It handles the train-test-validation split for model development and evaluation.
 """
 
 import os
+import sys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 from src.entity.config_entity import DataTransformationConfig
 
 logger = get_logger(__name__)
@@ -16,6 +18,10 @@ class DataTransformation:
     """
     This class implements the 'Transformation' stage of the CRISP-DM lifecycle,
     focusing on deterministic data partitioning (Train/Val/Test) for MLOps tracking.
+
+    Attributes:
+        config (DataTransformationConfig): Configuration entity containing data paths,
+            model name, and batch size for the enrichment process.
     """
 
     def __init__(self, config: DataTransformationConfig):
@@ -25,12 +31,13 @@ class DataTransformation:
         """
         Orchestrates the full transformation pipeline.
 
-        Reads the ingested CSV and cleaned data, performs a 3-way split
-        (Train/Val/Test), and saves the resulting artifacts (train.csv, val.csv, test.csv)
-        to the root directory.
+        This method performs the following steps:
+        1. Reads the cleaned book dataset from the specified path.
+        2. Performs a 3-way split (Train/Val/Test) using the specified test_size and val_size.
+        3. Saves the resulting artifacts (train.csv, val.csv, test.csv) to the root directory.
 
         Raises:
-            Exception: If any error occurs during the transformation process.
+            CustomException: If any error occurs during the transformation process.
         """
         try:
             # NOTE: We read the CLEAN data, not the raw data
@@ -66,5 +73,4 @@ class DataTransformation:
             )
 
         except Exception as e:
-            logger.exception(e)
-            raise e
+            raise CustomException(e, sys)

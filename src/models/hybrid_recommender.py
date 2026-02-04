@@ -10,6 +10,8 @@ from src.models.llm_utils import EmbeddingFactory
 from src.entity.config_entity import InferenceConfig
 from src.utils.logger import get_logger
 from src.utils.paths import PROJECT_ROOT
+from src.utils.exception import CustomException
+import sys
 
 logger = get_logger(__name__)
 
@@ -25,31 +27,40 @@ class HybridRecommender:
 
     def __init__(self, config: InferenceConfig):
         """
-        Initializes the HybridRecommender components.
+        Initializes the HybridRecommender components, including the embedding function,
+        vector store (ChromaDB), and book metadata.
 
         Args:
-            config (InferenceConfig): The inference configuration entity.
+            config (InferenceConfig): The inference configuration entity containing
+                embedding provider details, database paths, and data source locations.
+
+        Raises:
+            CustomException: If any component fails to initialize or data cannot be loaded.
         """
-        self.config = config
+        try:
+            self.config = config
 
-        self.embedding_fn = EmbeddingFactory.get_embedding_function(
-            provider=self.config.embedding_provider, model_name=self.config.model_name
-        )
+            self.embedding_fn = EmbeddingFactory.get_embedding_function(
+                provider=self.config.embedding_provider,
+                model_name=self.config.model_name,
+            )
 
-        self.vector_store = Chroma(
-            persist_directory=str(self.config.chroma_db_dir),
-            embedding_function=self.embedding_fn,
-            collection_name=self.config.collection_name,
-        )
+            self.vector_store = Chroma(
+                persist_directory=str(self.config.chroma_db_dir),
+                embedding_function=self.embedding_fn,
+                collection_name=self.config.collection_name,
+            )
 
-        # We read 'clean_books.csv' specifically to get ALL ratings, not just the training set.
-        # This fixes the issue where a book might be in the vector DB but missing from a 'train.csv' split.
-        self.books_metadata = pd.read_csv(self.config.data_path)
-        self.books_metadata.set_index("isbn13", inplace=True)
+            # We read 'clean_books.csv' specifically to get ALL ratings, not just the training set.
+            # This fixes the issue where a book might be in the vector DB but missing from a 'train.csv' split.
+            self.books_metadata = pd.read_csv(self.config.data_path)
+            self.books_metadata.set_index("isbn13", inplace=True)
 
-        logger.info(
-            f"Hybrid Recommender initialized. DB: {self.config.chroma_db_dir.relative_to(PROJECT_ROOT)}"
-        )
+            logger.info(
+                f"Hybrid Recommender initialized. DB: {self.config.chroma_db_dir.relative_to(PROJECT_ROOT)}"
+            )
+        except Exception as e:
+            raise CustomException(e, sys)
 
     def recommend(
         self, query: str, category_filter: str = None, tone_filter: str = None
@@ -69,22 +80,27 @@ class HybridRecommender:
         top_k = self.config.top_k
         popularity_weight = self.config.popularity_weight
 
-        logger.info(
-            f"Processing query: '{query}' (Category: {category_filter}, Tone: {tone_filter})"
-        )
+        try:
+            logger.info(
+                f"Processing query: '{query}' (Category: {category_filter}, Tone: {tone_filter})"
+            )
 
-        # 1. Semantic Search (Fetch more to allow for filtering)
-        # Increase fetch buffer if filters are applied to find matches in the long tail.
-        # Since ChromaDB metadata might not match the specific filters (categories/tone), we rely on post-filtering.
-        # We need a large window to ensure we find enough candidates that match both semantic relevance and the hard filters.
-        fetch_multiplier = 5
-        if category_filter or tone_filter:
-            fetch_multiplier = 50
+            # 1. Semantic Search (Fetch more to allow for filtering)
+            # Increase fetch buffer if filters are applied to find matches in the long tail.
+            # Since ChromaDB metadata might not match the specific filters (categories/tone), we rely on post-filtering.
+            # We need a large window to ensure we find enough candidates that match both semantic relevance and the hard filters.
+            fetch_multiplier = 5
+            if category_filter or tone_filter:
+                fetch_multiplier = 50
 
-        fetch_k = top_k * fetch_multiplier
-        logger.info(f"Fetching {fetch_k} candidates from VectorDB for filtering...")
+            fetch_k = top_k * fetch_multiplier
+            logger.info(f"Fetching {fetch_k} candidates from VectorDB for filtering...")
 
-        results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
+            results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
+
+        except Exception as e:
+            # Critical failure in vector search (e.g., DB disconnected)
+            raise CustomException(e, sys)
 
         recommendations = []
 

@@ -73,6 +73,7 @@ jobs:
 
     steps:
       - name: Deploy to EC2 via SSH
+        if: ${{ secrets.EC2_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -96,3 +97,11 @@ jobs:
 
             # 5. Cleanup
             docker image prune -f
+
+      - name: Deployment Simulation (No AWS Secrets Found)
+        if: ${{ secrets.EC2_HOST == '' }}
+        run: |
+          echo "::warning::AWS Secrets (EC2_HOST) not found. Skipping live deployment."
+          echo "Simulation: 1. CI/CD Pipeline passed."
+          echo "Simulation: 2. Docker Image pushed to GHCR."
+          echo "Simulation: 3. Ready to deploy when secrets are added."

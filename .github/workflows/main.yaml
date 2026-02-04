@@ -70,10 +70,12 @@ jobs:
     needs: test_and_build
     if: github.ref == 'refs/heads/main' # Only deploy from main branch
     runs-on: ubuntu-latest
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
 
     steps:
       - name: Deploy to EC2 via SSH
-        if: secrets.EC2_HOST != ''
+        if: env.EC2_HOST != ''
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -99,7 +101,7 @@ jobs:
             docker image prune -f
 
       - name: Deployment Simulation (No AWS Secrets Found)
-        if: secrets.EC2_HOST == ''
+        if: env.EC2_HOST == ''
         run: |
           echo "::warning::AWS Secrets (EC2_HOST) not found. Skipping live deployment."
           echo "Simulation: 1. CI/CD Pipeline passed."

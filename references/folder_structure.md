@@ -1,112 +1,119 @@
 hybrid-book-recommender
-├── LICENSE.txt                <- Project's license (Open-source if one is chosen).
-├── README.md                  <- The top-level README for developers using this project.
+├── .dockerignore
+├── .dvc/                      <- DVC configuration directory.
+├── .dvcignore
 ├── .env                       <- Secret environment variables (Gemini API Key, AWS creds).
-├── .gitignore                 <- Files to ignore by Git.
-├── dvc.yaml                   <- The Pipeline Conductor.
-├── pyproject.toml             <- UV dependency definitions.
-├── Dockerfile                 <- Production container definition.
-├── template.py                <- Python script to generate the MLOps directory structure (Configuration, Components, Pipelines) automatically.
-├── main.py                    <- Acts as the "Switchboard" for the project.
-│
 ├── .github/
-│   └── workflows/             <- CI/CD (main.yaml).
-│
-├── artifacts/
+│   └── workflows/             <- CI/CD configuration (main.yaml).
+├── .gitignore
+├── .pytest_cache/
+├── .python-version
+├── .venv/                     <- Virtual environment.
+├── .vscode/
+├── Dockerfile                 <- Production container definition.
+├── GEMINI.md                  <- Gemini Model Documentation.
+├── Hybrid-Book-Recommender.code-workspace
+├── LICENSE.txt                <- Project's license.
+├── README.md                  <- Top-level documentation.
+├── app.py                     <- Gradio Web Application.
+├── artifacts/                 <- Pipeline outputs (gitignored, tracked by DVC).
+│   ├── data_enrichment/
 │   ├── data_ingestion/
-│   │   ├── data.zip
-│   │   └── books.csv (The extracted file)
-│   │
-│   ├── data_validation/
-│   │   ├── clean_books.csv (The cleaned file)
-│   │   └── status.txt (Validation status)
-│   │
 │   ├── data_transformation/
-│   │   ├── train.csv
-│   │   ├── val.csv
-│   │   └── test.csv
-│   │
+│   ├── data_validation/
+│   ├── model_evaluation/
 │   ├── model_trainer/
-│   │    └── vectordb/
-│   │        ├── 83e179a0-4895-4b97-93a7-2feb1c60ef45/
-│   │        └── chroma.sqlite3         <- ChromaDB.
-│   │
-│   └── prediction/
-│       └── results.txt
-│
+│   ├── prediction/
+│   └── tone_analysis/
+├── assets/                    <- Static assets (images, logos).
 ├── config/
-│   ├── params.yaml            <- Hyperparameters (K-neighbors, Chunk size).
-│   └── config.yaml            <- System paths (artifacts/data).
-│
-├── 🛡️ Hybrid-book-Recommender.code-workspace <- VS Code workspace configuration.
-│
-├── models/                    <- Trained and serialized models, model predictions, or model summaries.
-│
-├── notebooks/                 <- Jupyter notebooks.
-│
-├── references/                <- Data dictionaries, manuals, and all other explanatory materials.
-│   ├── dataset_analysis.md
-│   ├── folder_structure.md
-│   ├── product_requirements.md
-│   └── project_overview.md
-│
-├── reports/                   <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   ├── docs/                  <- Generated documents to be used in reporting.
+│   ├── config.yaml            <- System paths configuration.
+│   └── params.yaml            <- Hyperparameters configuration.
+├── data/                      <- Raw data storage (gitignored).
+├── dvc.lock                   <- DVC reproduction lock file (Exact state snapshot).
+├── dvc.yaml                   <- DVC Pipeline definition (DAG).
+├── logs/                      <- Runtime logs.
+├── main.py                    <- Pipeline Orchestrator (Script mode).
+├── mlflow.db                  <- Local MLflow database.
+├── mlruns/                    <- MLflow experiment tracking storage.
+├── models/                    <- Serialized models / artifacts.
+├── notebooks/                 <- Jupyter notebooks for experimentation.
+├── pyproject.toml             <- UV dependency definitions.
+├── references/                <- Project documentation and standards.
+│   ├── project_overview.md
+│   └── ...
+├── reports/                   <- Generated analysis and documentation.
+│   ├── docs/                  <- Pipeline stage reports.
+│   │   ├── dvc_pipeline_report.md
 │   │   ├── stage_01_ingestion.md
-│   │   ├── stage_02_validation.md
-│   │   ├── stage_03_transformation.md
-│   │   ├── stage_04_training.md
-│   │   └── stage_05_prediction.md
+│   │   └── ...
+│   └── figures/
+├── scripts/                   <- Shell scripts.
+├── src/                       <- Application Source Code.
+│   ├── __init__.py
 │   │
-│   └── figures/               <- Generated graphics and figures to be used in reporting.
+│   ├── components/            <- Business Logic / Workers (The "How").
+│   │   ├── __init__.py
+│   │   ├── batch_prediction.py     <- Batch inference logic.
+│   │   ├── data_enrichment.py      <- Zero-shot classification logic.
+│   │   ├── data_ingestion.py       <- Download & unzip logic.
+│   │   ├── data_transformation.py  <- Split & Clean logic.
+│   │   ├── data_validation.py      <- Schema validation logic.
+│   │   ├── model_evaluation.py     <- Metric calculation logic.
+│   │   ├── model_trainer.py        <- Embedding Generation & Indexing.
+│   │   └── tone_analysis.py        <- Sentiment analysis logic.
+│   │
+│   ├── config/                <- Configuration Management.
+│   │   ├── __init__.py
+│   │   └── configuration.py        <- Validates inputs and creates config entities.
+│   │
+│   ├── entity/                <- Dataclasses (Type Definitions).
+│   │   ├── __init__.py
+│   │   ├── config_entity.py        <- Config DTOs.
+│   │   └── recommendation_entity.py<- Recommendation Result DTOs.
+│   │
+│   ├── features/              <- Feature Engineering.
+│   │   ├── __init__.py
+│   │   └── build_features.py
+│   │
+│   ├── models/                <- Core Model Architectures.
+│   │   ├── __init__.py
+│   │   ├── hybrid_recommender.py   <- Hybrid Engine (Vector Search + Filtering).
+│   │   └── llm_utils.py            <- LLM & Embedding Wrappers.
+│   │
+│   ├── pipeline/              <- Execution Stages (The "When").
+│   │   ├── __init__.py
+│   │   ├── stage_01_ingestion.py
+│   │   ├── stage_02_validation.py
+│   │   ├── stage_03_transformation.py
+│   │   ├── stage_04_training.py
+│   │   ├── stage_05_prediction.py
+│   │   └── stage_06_evaluation.py
+│   │
+│   ├── scripts/               <- Offline specific scripts.
+│   │   ├── run_enrichment.py       <- Runner for offline enrichment.
+│   │   └── run_tone_analysis.py    <- Runner for offline tone analysis.
+│   │
+│   ├── tests/                 <- Unit and Integration Tests.
+│   │   ├── __init__.py
+│   │   ├── conftest.py             <- Pytest fixtures.
+│   │   ├── test_broad_accuracy.py
+│   │   ├── test_enrichment_accuracy.py
+│   │   ├── test_recommender.py
+│   │   └── test_tone_accuracy.py
+│   │
+│   ├── utils/                 <- Shared Utilities.
+│   │   ├── __init__.py
+│   │   ├── common.py               <- YAML readers, directory creators.
+│   │   ├── exception.py            <- Custom Exception handling.
+│   │   ├── logger.py               <- Centralized Logging.
+│   │   ├── mlflow_config.py        <- MLflow URL logic.
+│   │   └── paths.py                <- Path constants.
+│   │
+│   └── visualization/         <- Plotting Tools.
+│       ├── __init__.py
+│       ├── plot_settings.py
+│       └── visualize.py
 │
-└── src/                            <- Source code for use in this project.
-    │
-    ├── __init__.py                 <- Makes src a Python module.
-    │
-    ├── features/
-    │   ├── __init__.py
-    │   └── build_features.py       <- Code to create features for modeling.
-    │
-    ├── components/                 <- The "Workhorses".
-    │   ├── __init__.py
-    │   ├── data_ingestion.py       <- Downloads & unzips.
-    │   ├── data_validation.py      <- Clean & validate.
-    │   ├── data_transformation.py  <- Apply transformations and split data into train/val/test.
-    │   └── model_trainer.py        <- Trains KNN & Builds VectorDB.
-    │
-    ├── config/                     <- The "Brain".
-    │   ├── __init__.py
-    │   └── configuration.py        <- Reads yaml, manages the configuration and returns Entity objects.
-    │
-    ├── constants/                  <- Never-changing values (e.g., file paths).
-    │   └── __init__.py
-    │
-    ├── entity/                     <- Data Classes only.
-    │   ├── __init__.py
-    │   └── config_entity.py        <- Typedefs for config (e.g., DataIngestionConfig).
-    │
-    ├── pipeline/                       <- The "Conductors".
-    │   ├── __init__.py
-    │   ├── stage_01_ingestion.py       <- Calls component.ingest().
-    │   ├── stage_02_validation.py      <- Calls component.validate().
-    │   ├── stage_03_transformation.py  <- Calls component.transform().
-    │   ├── stage_04_training.py        <- Calls component.train().
-    │   └── stage_05_prediction.py      <- Calls component.predict().
-    │
-    ├── models/                     <- Architecture Definitions.
-    │   ├── __init__.py
-    │   ├── hybrid_recommender.py   <- The class that merges KNN + VectorDB scores.
-    │   └── llm_utils.py            <- Wrappers for Gemini/LangChain.
-    │
-    ├── utils/                   <- Common tools.
-    │   ├── common.py            <- Config readers.
-    │   ├── paths.py             <- Define and manage file paths used throughout the project.
-    │   ├── mlflow_config.py     <- MLflow configuration across modules.
-    │   ├── logger.py            <- Logging setup for standardized log messages.
-    │   └── exception.py         <- Custom Error Handling (Reliability).
-    │
-    └── visualization/
-        ├── __init__.py
-        ├── plot_settings.py
-        └── visualize.py         <- Code to create visualizations.
+├── template.py                <- Project scaffolding script.
+└── uv.lock                    <- Dependency lock file (Exact versions).

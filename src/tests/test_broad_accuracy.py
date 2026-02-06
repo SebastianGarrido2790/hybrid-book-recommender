@@ -2,6 +2,19 @@
 Module for evaluating the broad classification accuracy of the book categorization model.
 This test script compares predicted categories against ground truth by mapping them
 into high-level binary classes (Fiction vs. Non-Fiction) and generating performance metrics.
+
+Usage Instructions:
+    1. Run all tests:
+       uv run pytest src/tests
+
+    2. Run tests with verbose output (recommended):
+       uv run pytest src/tests -vv
+
+    3. Run a specific test module:
+       uv run pytest src/tests/test_broad_accuracy.py
+
+    4. Run specific tests by keyword matching:
+       uv run pytest -k "broad"
 """
 
 import pandas as pd
@@ -17,7 +30,7 @@ STAGE_NAME = "Broad Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
-def test_broad_accuracy():
+def test_broad_accuracy() -> None:
     """
     Evaluates accuracy using broad masks (Fiction vs Non-Fiction).
 
@@ -40,14 +53,14 @@ def test_broad_accuracy():
 
         # 1. Map Ground Truth to Broad classes
         # Categories starting with 'Juvenile Fiction' or just 'Fiction'
-        def get_broad_gt(cat):
+        def get_broad_gt(cat: str) -> str:
             cat = str(cat)
             if "Fiction" in cat or "Novel" in cat or "Literary Criticism" in cat:
                 return "Broad_Fiction"
             return "Broad_NonFiction"
 
         # 2. Map Predictions to Broad classes
-        def get_broad_pred(label):
+        def get_broad_pred(label: str) -> str:
             fiction_labels = ["Fiction", "Fantasy", "Thriller"]
             if label in fiction_labels:
                 return "Broad_Fiction"

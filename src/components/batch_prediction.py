@@ -35,7 +35,7 @@ class BatchPrediction:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def run_batch_predictions(self, queries: list):
+    def run_batch_predictions(self, queries: list) -> None:
         """
         Runs predictions for the provided queries and saves results to the configured file.
 
@@ -70,18 +70,18 @@ class BatchPrediction:
 
                     for i, book in enumerate(results):
                         result_str = (
-                            f"{i + 1}. {book.get('title', 'Unknown')} | "
-                            f"{book.get('category', 'Unknown')} "
-                            f"(Rating: {book.get('rating', 'N/A')}, Score: {book.get('score', 0):.3f})"
+                            f"{i + 1}. {book.title} | "
+                            f"{book.category} "
+                            f"(Rating: {book.rating}, Score: {book.score:.3f})"
                         )
 
                         print(result_str)
-                        print(f"   Author: {book.get('authors', 'Unknown')}")
+                        print(f"   Author: {book.authors}")
 
                         f.write(result_str + "\n")
-                        f.write(f"   Author: {book.get('authors', 'Unknown')}\n")
+                        f.write(f"   Author: {book.authors}\n")
 
-                        desc = book.get("description", "")
+                        desc = book.description
                         desc_preview = (
                             desc[:100].replace("\n", " ") + "..."
                             if desc
@@ -90,7 +90,9 @@ class BatchPrediction:
                         print(f"   Desc: {desc_preview}")
                         f.write(f"   Desc: {desc_preview}\n")
 
-            logger.info("Batch prediction completed successfully.")
+            logger.info(
+                f"Batch prediction for {len(queries)} queries completed successfully."
+            )
 
         except Exception as e:
             raise CustomException(e, sys)

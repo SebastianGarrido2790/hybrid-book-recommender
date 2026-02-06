@@ -27,7 +27,7 @@ class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config = config
 
-    def download_file(self):
+    def download_file(self) -> None:
         """
         Downloads the file from the source URL.
 
@@ -50,7 +50,7 @@ class DataIngestion:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def extract_zip_file(self):
+    def extract_zip_file(self) -> None:
         """
         Extracts the zip file into the configured data directory.
 

@@ -27,7 +27,7 @@ class DataTransformation:
     def __init__(self, config: DataTransformationConfig):
         self.config = config
 
-    def initiate_data_transformation(self):
+    def initiate_data_transformation(self) -> None:
         """
         Orchestrates the full transformation pipeline.
 

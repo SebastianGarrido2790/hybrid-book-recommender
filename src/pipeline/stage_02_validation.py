@@ -23,7 +23,7 @@ class DataValidationTrainingPipeline:
     def __init__(self):
         pass
 
-    def main(self):
+    def main(self) -> None:
         """
         Executes the main steps of the Data Validation pipeline.
 

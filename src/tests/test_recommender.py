@@ -6,6 +6,19 @@ This module validates the core recommendation logic, ensuring that:
 2. Filtering mechanisms (Categories) work efficiently.
 3. External dependencies (ChromaDB, Google/HuggingFace APIs) are mocked to ensure
    tests are fast, deterministic, and runnable in CI/CD environments without API keys.
+
+Usage Instructions:
+    1. Run all tests:
+       uv run pytest src/tests
+
+    2. Run tests with verbose output (recommended):
+       uv run pytest src/tests -vv
+
+    3. Run a specific test module:
+       uv run pytest src/tests/test_recommender.py
+
+    4. Run specific tests by keyword matching:
+       uv run pytest -k "recommender"
 """
 
 import pytest
@@ -14,13 +27,14 @@ from unittest.mock import MagicMock, patch
 from src.entity.config_entity import InferenceConfig
 from src.models.hybrid_recommender import HybridRecommender
 from src.utils.paths import PROJECT_ROOT
+from typing import Dict, Any, Generator
 
 
 # --- Fixtures ---
 
 
 @pytest.fixture
-def mock_config():
+def mock_config() -> InferenceConfig:
     """Provides a mock configuration object."""
     return InferenceConfig(
         model_name="test-model",
@@ -30,11 +44,12 @@ def mock_config():
         collection_name="test_collection",
         top_k=2,
         popularity_weight=0.5,
+        search_buffer_multiplier=3,
     )
 
 
 @pytest.fixture
-def mock_books_data():
+def mock_books_data() -> pd.DataFrame:
     """Provides a sample pandas DataFrame mimicking the books metadata."""
     return pd.DataFrame(
         {
@@ -53,7 +68,9 @@ def mock_books_data():
 
 
 @pytest.fixture
-def mock_dependencies(mock_books_data):
+def mock_dependencies(
+    mock_books_data: pd.DataFrame,
+) -> Generator[Dict[str, Any], None, None]:
     """
     Patches external dependencies (Chroma, EmbeddingFactory, pd.read_csv).
     Returns the set of mock objects for assertion.
@@ -84,7 +101,9 @@ def mock_dependencies(mock_books_data):
 # --- Tests ---
 
 
-def test_recommend_flow(mock_config, mock_dependencies):
+def test_recommend_flow(
+    mock_config: InferenceConfig, mock_dependencies: Dict[str, Any]
+) -> None:
     """Verifies that the recommend method returns correctly calculated hybrid scores."""
 
     # 1. Setup Mock Vector Search Results
@@ -126,10 +145,8 @@ def test_recommend_flow(mock_config, mock_dependencies):
     first_rec = recommendations[0]
 
     # Structure checks
-    assert "isbn" in first_rec
-    assert "score" in first_rec
-    assert first_rec["isbn"] == 1234567890123
-    assert first_rec["title"] == "Book One"
+    assert first_rec.isbn == 1234567890123
+    assert first_rec.title == "Book One"
 
     # Score Logic Verification
     # Formula: (1 - distance) + (rating/5.0 * weight)
@@ -137,10 +154,12 @@ def test_recommend_flow(mock_config, mock_dependencies):
     expected_score = (1 - 0.1) + (4.5 / 5.0) * 0.5
 
     # Use pytest.approx for floating point comparisons
-    assert first_rec["score"] == pytest.approx(expected_score, abs=0.01)
+    assert first_rec.score == pytest.approx(expected_score, abs=0.01)
 
 
-def test_recommend_with_filter(mock_config, mock_dependencies):
+def test_recommend_with_filter(
+    mock_config: InferenceConfig, mock_dependencies: Dict[str, Any]
+) -> None:
     """Verifies that category filtering correctly excludes mismatched items."""
 
     mock_vector_store = mock_dependencies["vector_store"]
@@ -170,5 +189,9 @@ def test_recommend_with_filter(mock_config, mock_dependencies):
     recommendations = recommender.recommend("query", category_filter="Non-Fiction")
 
     assert len(recommendations) == 1
-    assert recommendations[0]["isbn"] == 9876543210987
-    assert recommendations[0]["category"] == "Non-Fiction"
+    assert recommendations[0].isbn == 9876543210987
+    # Note: RecommendationResult uses 'simple_category` mapped to 'category' property if desired,
+    # but based on RecommendationResult definition, we should check relevant attributes.
+    # The test previously checked ["category"], let's check simple_category from the mock data logic.
+    # In mock_books_data, Book Two is "Non-Fiction".
+    assert recommendations[0].category == "Non-Fiction"

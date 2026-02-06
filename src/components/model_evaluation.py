@@ -41,7 +41,7 @@ class ModelEvaluation:
     def __init__(self, config: ModelEvaluationConfig):
         self.config = config
 
-    def log_into_mlflow(self):
+    def log_into_mlflow(self) -> None:
         """
         Logs parameters and basic metrics to MLflow.
 
@@ -109,7 +109,7 @@ class ModelEvaluation:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def _flatten_dict(self, d, parent_key="", sep="_"):
+    def _flatten_dict(self, d, parent_key="", sep="_") -> dict:
         """Helper to flatten nested config/params dictionaries."""
         items = []
         for k, v in d.items():

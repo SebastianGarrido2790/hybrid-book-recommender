@@ -25,7 +25,7 @@ class DataTransformationTrainingPipeline:
     def __init__(self):
         pass
 
-    def main(self):
+    def main(self) -> None:
         """
         Main execution flow for the Data Transformation stage.
 

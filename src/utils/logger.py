@@ -49,13 +49,32 @@ def get_logger(
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
 
-    if not root_logger.handlers:
-        # Define the format
-        formatter = logging.Formatter(
-            "[%(asctime)s] %(levelname)s: %(module)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+    # Check existing handlers to avoid duplicates
+    has_file_handler = False
+    has_console_handler = False
 
+    # Normalize target log path for comparison
+    target_log_path = os.path.normpath(str(LOG_FILE.resolve()))
+
+    for handler in root_logger.handlers:
+        if isinstance(handler, RotatingFileHandler):
+            # Check if it writes to our specific LOG_FILE
+            if (
+                hasattr(handler, "baseFilename")
+                and os.path.normpath(handler.baseFilename) == target_log_path
+            ):
+                has_file_handler = True
+        elif isinstance(handler, logging.StreamHandler):
+            # rudimentary check for console handler
+            has_console_handler = True
+
+    # Define the format
+    formatter = logging.Formatter(
+        "[%(asctime)s] %(levelname)s: %(module)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    if not has_file_handler:
         # File Handler (Rotates after 5MB)
         file_handler = RotatingFileHandler(
             LOG_FILE,
@@ -64,12 +83,12 @@ def get_logger(
             encoding="utf-8",
         )
         file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
 
+    if not has_console_handler:
         # Console Handler (Stream to stdout)
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
-
-        root_logger.addHandler(file_handler)
         root_logger.addHandler(console_handler)
 
     # 2. Get the specific logger requested
@@ -95,7 +114,7 @@ def get_logger(
     return logger
 
 
-def log_spacer():
+def log_spacer() -> None:
     """
     Appends a raw newline to the log file to provide visual spacing
     without the log formatter prefix (timestamp/levelname).

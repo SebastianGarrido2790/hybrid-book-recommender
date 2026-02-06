@@ -11,6 +11,7 @@ import re
 from src.entity.config_entity import ToneAnalysisConfig
 from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from typing import List
 import sys
 
 logger = get_logger(__name__)
@@ -28,7 +29,7 @@ class ToneAnalysis:
     def __init__(self, config: ToneAnalysisConfig):
         self.config = config
 
-    def _split_into_sentences(self, text: str):
+    def _split_into_sentences(self, text: str) -> List[str]:
         """
         Splits text into sentences using a robust regex.
         """
@@ -38,7 +39,7 @@ class ToneAnalysis:
         sentences = re.split(r"(?<=[.!?])\s+", text)
         return [s.strip() for s in sentences if len(s.strip()) > 5]
 
-    def initiate_tone_analysis(self):
+    def initiate_tone_analysis(self) -> None:
         """
         Executes the sentence-level tone analysis process.
 

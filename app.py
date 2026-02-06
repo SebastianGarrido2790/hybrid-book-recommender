@@ -13,13 +13,14 @@ from src.config.configuration import ConfigurationManager
 from src.models.hybrid_recommender import HybridRecommender
 from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from typing import List, Tuple, Dict, Any, Optional
 import sys
 
 logger = get_logger(__name__)
 
 
 # --- ENGINE INITIALIZATION ---
-def init_recommender():
+def init_recommender() -> Optional[HybridRecommender]:
     """
     Initializes the HybridRecommender engine.
 
@@ -67,7 +68,7 @@ PLACEHOLDER_IMG_URL = PLACEHOLDER_IMG_ABS
 
 
 # --- HELPER FUNCTIONS ---
-def get_high_res_image(url):
+def get_high_res_image(url: str) -> str:
     if not isinstance(url, str) or not url or url.lower() == "nan":
         return PLACEHOLDER_IMG_URL
 
@@ -77,7 +78,7 @@ def get_high_res_image(url):
     return f"{url}&fife=w800" if "?" in url else f"{url}?fife=w800"
 
 
-def format_authors(authors_str):
+def format_authors(authors_str: str) -> str:
     if not isinstance(authors_str, str) or not authors_str:
         return "Unknown Author"
 
@@ -100,7 +101,9 @@ def format_authors(authors_str):
 
 
 # --- UI LOGIC ---
-def recommend_books(query, category, tone):
+def recommend_books(
+    query: str, category: str, tone: str
+) -> Tuple[List[Tuple[str, str]], List[Dict[str, Any]], str]:
     if not recommender:
         return [], [], "System Error: Recommender not initialized."
 
@@ -134,12 +137,12 @@ def recommend_books(query, category, tone):
     full_data = []
 
     for book in results:
-        image_url = get_high_res_image(book.get("thumbnail"))
-        title = book.get("title", "Untitled")
-        authors = format_authors(book.get("authors"))
-        desc = book.get("description", "No description available.")
-        rating = book.get("rating", "N/A")
-        tone_prob = book.get("tone_prob", 0)
+        image_url = get_high_res_image(book.thumbnail)
+        title = book.title
+        authors = format_authors(book.authors)
+        desc = book.description if book.description else "No description available."
+        rating = book.rating
+        tone_prob = book.tone_prob
 
         try:
             mood_score = f"{float(tone_prob):.2f}"
@@ -168,7 +171,7 @@ def recommend_books(query, category, tone):
     return gallery_items, full_data, ""
 
 
-def on_select(evt: gr.SelectData, data):
+def on_select(evt: gr.SelectData, data: List[Dict[str, Any]]) -> str:
     if not data or evt.index >= len(data):
         return ""
 

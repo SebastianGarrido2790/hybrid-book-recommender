@@ -21,7 +21,7 @@ class ModelEvaluationPipeline:
     def __init__(self):
         pass
 
-    def main(self):
+    def main(self) -> None:
         """
         Main execution flow for the Model Evaluation stage.
 

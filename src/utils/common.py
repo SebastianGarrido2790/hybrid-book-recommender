@@ -13,8 +13,8 @@ import joblib
 from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
-from typing import Any
 from src.utils.exception import CustomException
+from typing import Any
 import sys
 
 logger = get_logger(__name__)
@@ -49,8 +49,7 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
         raise CustomException(e, sys)
 
 
-@ensure_annotations
-def create_directories(path_to_directories: list, verbose=True):
+def create_directories(path_to_directories: list, verbose: bool = True) -> None:
     """
     Creates a list of directories.
 
@@ -65,8 +64,7 @@ def create_directories(path_to_directories: list, verbose=True):
             logger.info(f"created directory at: {path.relative_to(PROJECT_ROOT)}")
 
 
-@ensure_annotations
-def save_json(path: Path, data: dict):
+def save_json(path: Path, data: dict) -> None:
     """
     Saves a dictionary to a JSON file.
     """
@@ -88,8 +86,7 @@ def load_json(path: Path) -> ConfigBox:
     return ConfigBox(content)
 
 
-@ensure_annotations
-def save_bin(data: Any, path: Path):
+def save_bin(data: Any, path: Path) -> None:
     """
     Saves data as a binary file (pickle) using joblib.
     """

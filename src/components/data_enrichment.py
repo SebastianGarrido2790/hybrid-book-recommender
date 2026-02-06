@@ -33,7 +33,7 @@ class DataEnrichment:
     def __init__(self, config: DataEnrichmentConfig):
         self.config = config
 
-    def initiate_data_enrichment(self):
+    def initiate_data_enrichment(self) -> None:
         """
         Executes the enrichment process.
 

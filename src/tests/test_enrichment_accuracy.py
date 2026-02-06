@@ -5,6 +5,19 @@ This module performs a quantitative assessment of the enrichment pipeline by:
 1. Mapping original dataset categories to broad target facets (Ground Truth).
 2. Calculating classification metrics including Accuracy and F1-Score.
 3. Generating and saving confusion matrix heatmaps for error analysis.
+
+Usage Instructions:
+    1. Run all tests:
+       uv run pytest src/tests
+
+    2. Run tests with verbose output (recommended):
+       uv run pytest src/tests -vv
+
+    3. Run a specific test module:
+       uv run pytest src/tests/test_enrichment_accuracy.py
+
+    4. Run specific tests by keyword matching:
+       uv run pytest -k "enrichment"
 """
 
 import pandas as pd
@@ -20,7 +33,7 @@ STAGE_NAME = "Enrichment Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
-def test_enrichment_accuracy():
+def test_enrichment_accuracy() -> None:
     """
     Evaluates the accuracy of the Zero-Shot Enricher by comparing predictions
     against a manually mapped 'Ground Truth' from the original dataset.

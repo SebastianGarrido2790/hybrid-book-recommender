@@ -275,6 +275,7 @@ class ConfigurationManager:
                 collection_name=params_inference.collection_name,
                 top_k=params_inference.top_k,
                 popularity_weight=params_inference.popularity_weight,
+                search_buffer_multiplier=params_inference.search_buffer_multiplier,
             )
 
             return inference_config

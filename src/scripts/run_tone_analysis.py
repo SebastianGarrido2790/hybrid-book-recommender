@@ -3,6 +3,9 @@ Module for executing the offline tone analysis pipeline.
 
 This script initializes the configuration manager, retrieves the tone analysis
 configuration, and executes the tone analysis process using the ToneAnalysis component.
+
+Usage:
+    uv run python -m src.scripts.run_tone_analysis
 """
 
 from src.config.configuration import ConfigurationManager
@@ -15,7 +18,7 @@ STAGE_NAME = "Tone Analysis Script"
 logger = get_logger(headline=STAGE_NAME)
 
 
-def main():
+def main() -> None:
     """
     Main execution flow for the offline tone analysis script.
 

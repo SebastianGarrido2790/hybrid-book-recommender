@@ -26,7 +26,7 @@ class PredictionPipeline:
     def __init__(self):
         pass
 
-    def main(self):
+    def main(self) -> None:
         """
         Main execution flow for the Prediction Pipeline.
 
@@ -37,6 +37,8 @@ class PredictionPipeline:
             CustomException: If prediction flow fails.
         """
         try:
+            logger.info("🚀 Starting Prediction Pipeline 🚀")
+
             # 1. Load Configuration
             config_manager = ConfigurationManager()
             inference_config = config_manager.get_inference_config()
@@ -57,16 +59,15 @@ class PredictionPipeline:
             # 3. Run Batch Predictions
             batch_predictor.run_batch_predictions(queries)
 
+            logger.info("✅ Prediction Pipeline Completed ✅")
+
         except Exception as e:
             raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
     try:
-        logger.info(f"🚀 {STAGE_NAME} Started 🚀")
         obj = PredictionPipeline()
         obj.main()
-        logger.info(f"✅ {STAGE_NAME} Completed ✅")
     except Exception as e:
-        logger.exception(e)
         raise CustomException(e, sys)

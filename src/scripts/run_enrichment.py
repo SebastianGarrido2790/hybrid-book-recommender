@@ -3,6 +3,9 @@ Module for executing the offline data enrichment pipeline.
 
 This script initializes the configuration manager, retrieves the data enrichment
 configuration, and executes the enrichment process using the DataEnrichment component.
+
+Usage:
+    uv run python -m src.scripts.run_enrichment
 """
 
 from src.config.configuration import ConfigurationManager
@@ -15,7 +18,7 @@ STAGE_NAME = "Data Enrichment Script"
 logger = get_logger(headline=STAGE_NAME)
 
 
-def main():
+def main() -> None:
     """
     Main execution flow for the offline data enrichment script.
 

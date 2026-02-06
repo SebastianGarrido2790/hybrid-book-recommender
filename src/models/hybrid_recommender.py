@@ -4,10 +4,11 @@ It uses a vector database (ChromaDB) for semantic search and a collaborative fil
 """
 
 import pandas as pd
-from typing import List, Dict, Any
+from typing import List
 from langchain_chroma import Chroma
 from src.models.llm_utils import EmbeddingFactory
 from src.entity.config_entity import InferenceConfig
+from src.entity.recommendation_entity import RecommendationResult
 from src.utils.logger import get_logger
 from src.utils.paths import PROJECT_ROOT
 from src.utils.exception import CustomException
@@ -64,7 +65,7 @@ class HybridRecommender:
 
     def recommend(
         self, query: str, category_filter: str = None, tone_filter: str = None
-    ) -> List[Dict[str, Any]]:
+    ) -> List[RecommendationResult]:
         """
         Retrieves and ranks book recommendations based on a hybrid score.
 
@@ -74,7 +75,7 @@ class HybridRecommender:
             tone_filter (str, optional): A tone to filter results by (e.g., "joy", "fear").
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries, each containing book metadata
+            List[RecommendationResult]: A list of RecommendationResult objects, each containing book metadata
                                   and the calculated 'score'.
         """
         top_k = self.config.top_k
@@ -89,11 +90,12 @@ class HybridRecommender:
             # Increase fetch buffer if filters are applied to find matches in the long tail.
             # Since ChromaDB metadata might not match the specific filters (categories/tone), we rely on post-filtering.
             # We need a large window to ensure we find enough candidates that match both semantic relevance and the hard filters.
-            fetch_multiplier = 5
+            # We use the configured search_buffer_multiplier.
+            multiplier = self.config.search_buffer_multiplier
             if category_filter or tone_filter:
-                fetch_multiplier = 50
+                multiplier *= 10  # Additional boost for filtered queries
 
-            fetch_k = top_k * fetch_multiplier
+            fetch_k = top_k * multiplier
             logger.info(f"Fetching {fetch_k} candidates from VectorDB for filtering...")
 
             results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
@@ -142,8 +144,15 @@ class HybridRecommender:
                     if tone_filter and tone_filter in book_row:
                         tone_prob = float(book_row.get(tone_filter, 0.0))
 
-                    rating = float(book_row.get("average_rating", 0))
-                    ratings_count = int(book_row.get("ratings_count", 0))
+                    rating_val = book_row.get("average_rating", 0.0)
+                    rating = 0.0 if pd.isna(rating_val) else float(rating_val)
+
+                    # Safely conversion for ratings_count (int(NaN) raises ValueError)
+                    raw_count = book_row.get("ratings_count", 0)
+                    try:
+                        ratings_count = int(raw_count)
+                    except (ValueError, TypeError):
+                        ratings_count = 0
 
                     # 2. Hybrid Scoring
                     similarity_score = 1 - score
@@ -152,20 +161,20 @@ class HybridRecommender:
                     )
 
                     recommendations.append(
-                        {
-                            "isbn": isbn,
-                            "title": doc.metadata.get("title"),
-                            "authors": doc.metadata.get("authors"),
-                            "description": doc.metadata.get("description"),
-                            "category": category,
-                            "tone": tone,
-                            "tone_prob": tone_prob,
-                            "rating": rating,
-                            "ratings_count": ratings_count,
-                            "thumbnail": book_row.get("thumbnail"),
-                            "score": hybrid_score,
-                            "match_reason": "Hybrid Match",
-                        }
+                        RecommendationResult(
+                            isbn=isbn,
+                            title=doc.metadata.get("title", ""),
+                            authors=doc.metadata.get("authors", ""),
+                            description=doc.metadata.get("description", ""),
+                            category=category,
+                            tone=tone,
+                            tone_prob=tone_prob,
+                            rating=rating,
+                            ratings_count=ratings_count,
+                            thumbnail=book_row.get("thumbnail"),
+                            score=hybrid_score,
+                            match_reason="Hybrid Match",
+                        )
                     )
             except Exception as e:
                 logger.warning(f"Skipping book due to error: {e}")
@@ -176,10 +185,10 @@ class HybridRecommender:
         # Otherwise, use the standard hybrid score.
         if tone_filter:
             recommendations = sorted(
-                recommendations, key=lambda x: x["tone_prob"], reverse=True
+                recommendations, key=lambda x: x.tone_prob, reverse=True
             )
         else:
             recommendations = sorted(
-                recommendations, key=lambda x: x["score"], reverse=True
+                recommendations, key=lambda x: x.score, reverse=True
             )
         return recommendations[:top_k]

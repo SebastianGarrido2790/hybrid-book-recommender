@@ -14,6 +14,7 @@ from langchain_core.documents import Document
 from src.entity.config_entity import ModelTrainerConfig
 from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from typing import Any
 import sys
 
 # Load environment variables (API Keys)
@@ -36,7 +37,7 @@ class ModelTrainer:
     def __init__(self, config: ModelTrainerConfig):
         self.config = config
 
-    def get_embedding_function(self):
+    def get_embedding_function(self) -> Any:
         """
         Factory method to get the embedding function based on configuration.
         """
@@ -44,7 +45,7 @@ class ModelTrainer:
             provider=self.config.embedding_provider, model_name=self.config.model_name
         )
 
-    def initiate_model_training(self):
+    def initiate_model_training(self) -> None:
         """
         Executes the embedding generation and indexing process.
 

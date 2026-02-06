@@ -5,7 +5,7 @@ This module defines dataclass entities to enforce strict type safety and immutab
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ class DataTransformationConfig:
     test_size: float
     val_size: float
     random_state: int
-    tokenizer_name: str = None
+    tokenizer_name: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -151,6 +151,7 @@ class InferenceConfig:
         collection_name (str): Name of the ChromaDB collection.
         top_k (int): Number of top recommendations to return.
         popularity_weight (float): Weight for the rating boost in hybrid score.
+        search_buffer_multiplier (int): Multiplier for initial search validation.
     """
 
     model_name: str
@@ -160,6 +161,7 @@ class InferenceConfig:
     collection_name: str
     top_k: int
     popularity_weight: float
+    search_buffer_multiplier: int
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,19 @@
 Module for testing and validating the accuracy of the Tone Classifier.
 Provides functionality for manual verification (Vibe Check) and statistical visualization
 of the global tone distribution across the dataset.
+
+Usage Instructions:
+    1. Run all tests:
+       uv run pytest src/tests
+
+    2. Run tests with verbose output (recommended):
+       uv run pytest src/tests -vv
+
+    3. Run a specific test module:
+       uv run pytest src/tests/test_tone_accuracy.py
+
+    4. Run specific tests by keyword matching:
+       uv run pytest -k "tone"
 """
 
 import pandas as pd
@@ -16,7 +29,7 @@ STAGE_NAME = "Tone Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
-def test_tone_accuracy():
+def test_tone_accuracy() -> None:
     """
     Evaluates the accuracy of the Tone Classifier by performing a 'Vibe Check'
     on a random sample of enriched books and generating a distribution plot.

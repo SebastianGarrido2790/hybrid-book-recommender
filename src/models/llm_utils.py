@@ -8,6 +8,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from typing import Any
 import sys
 
 logger = get_logger(__name__)
@@ -20,7 +21,7 @@ class EmbeddingFactory:
     """
 
     @staticmethod
-    def get_embedding_function(provider: str, model_name: str):
+    def get_embedding_function(provider: str, model_name: str) -> Any:
         """
         Returns the LangChain embedding function based on the provider.
 

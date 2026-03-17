@@ -5,7 +5,7 @@ This module defines dataclass entities to enforce strict type safety and immutab
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ class DataTransformationConfig:
     test_size: float
     val_size: float
     random_state: int
-    tokenizer_name: Optional[str] = None
+    tokenizer_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -80,7 +80,7 @@ class DataEnrichmentConfig:
         data_path (Path): Path to the cleaned data file.
         enriched_data_path (Path): Path where the enriched data will be saved.
         model_name (str): Name of the zero-shot classification model.
-        candidate_labels (List[str]): List of target categories for classification.
+        candidate_labels (list[str]): List of target categories for classification.
         batch_size (int): Number of descriptions to classify in each batch.
     """
 
@@ -88,7 +88,7 @@ class DataEnrichmentConfig:
     data_path: Path
     enriched_data_path: Path
     model_name: str
-    candidate_labels: List[str]
+    candidate_labels: list[str]
     batch_size: int
 
 
@@ -102,7 +102,7 @@ class ToneAnalysisConfig:
         data_path (Path): Path to the enriched data file.
         output_path (Path): Path where the toned data will be saved.
         model_name (str): Name of the sentiment analysis model.
-        target_emotions (List[str]): List of target emotions for classification.
+        target_emotions (list[str]): List of target emotions for classification.
         batch_size (int): Number of descriptions to analyze in each batch.
     """
 
@@ -110,7 +110,7 @@ class ToneAnalysisConfig:
     data_path: Path
     output_path: Path
     model_name: str
-    target_emotions: List[str]
+    target_emotions: list[str]
     batch_size: int
 
 
@@ -187,13 +187,13 @@ class ModelEvaluationConfig:
         root_dir (Path): Root directory for evaluation artifacts.
         data_path (Path): Path to the validation/test data.
         model_path (Path): Path to the persisted model/VectorDB.
-        all_params (dict): All parameters to be logged to MLflow.
+        all_params (dict[str, Any]): All parameters to be logged to MLflow.
         mlflow_uri (str): URI for the MLflow tracking server.
     """
 
     root_dir: Path
     data_path: Path
     model_path: Path
-    all_params: dict
+    all_params: dict[str, Any]
     mlflow_uri: str
     experiment_name: str

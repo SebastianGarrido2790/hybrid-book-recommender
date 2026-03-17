@@ -8,11 +8,12 @@ Usage:
     uv run python -m src.scripts.run_tone_analysis
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.tone_analysis import ToneAnalysis
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.tone_analysis import ToneAnalysis
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Tone Analysis Script"
 logger = get_logger(headline=STAGE_NAME)

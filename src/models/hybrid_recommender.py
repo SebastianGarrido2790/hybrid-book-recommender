@@ -3,16 +3,17 @@ This module implements a hybrid recommendation system that combines semantic sea
 It uses a vector database (ChromaDB) for semantic search and a collaborative filtering proxy (ratings) to boost books with higher average ratings.
 """
 
+import sys
+
 import pandas as pd
-from typing import List
 from langchain_chroma import Chroma
-from src.models.llm_utils import EmbeddingFactory
+
+from src.constants import PROJECT_ROOT
 from src.entity.config_entity import InferenceConfig
 from src.entity.recommendation_entity import RecommendationResult
-from src.utils.logger import get_logger
-from src.utils.paths import PROJECT_ROOT
+from src.models.llm_utils import EmbeddingFactory
 from src.utils.exception import CustomException
-import sys
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -64,8 +65,8 @@ class HybridRecommender:
             raise CustomException(e, sys)
 
     def recommend(
-        self, query: str, category_filter: str = None, tone_filter: str = None
-    ) -> List[RecommendationResult]:
+        self, query: str, category_filter: str | None = None, tone_filter: str | None = None
+    ) -> list[RecommendationResult]:
         """
         Retrieves and ranks book recommendations based on a hybrid score.
 
@@ -124,16 +125,11 @@ class HybridRecommender:
                     if category is None:
                         category = book_row.get("categories", "Uncategorized")
 
-                    if (
-                        category_filter
-                        and category_filter.lower() != str(category).lower()
-                    ):
+                    if category_filter and category_filter.lower() != str(category).lower():
                         continue
 
                     # --- TONE FILTERING ---
-                    tone = book_row.get(
-                        "dominant_tone", "neutral"
-                    )  # default to neutral if missing
+                    tone = book_row.get("dominant_tone", "neutral")  # default to neutral if missing
 
                     if tone_filter and tone_filter.lower() != str(tone).lower():
                         continue
@@ -156,9 +152,7 @@ class HybridRecommender:
 
                     # 2. Hybrid Scoring
                     similarity_score = 1 - score
-                    hybrid_score = similarity_score + (
-                        (rating / 5.0) * popularity_weight
-                    )
+                    hybrid_score = similarity_score + ((rating / 5.0) * popularity_weight)
 
                     recommendations.append(
                         RecommendationResult(
@@ -184,11 +178,7 @@ class HybridRecommender:
         # If a tone is selected, prioritized by probability as requested.
         # Otherwise, use the standard hybrid score.
         if tone_filter:
-            recommendations = sorted(
-                recommendations, key=lambda x: x.tone_prob, reverse=True
-            )
+            recommendations = sorted(recommendations, key=lambda x: x.tone_prob, reverse=True)
         else:
-            recommendations = sorted(
-                recommendations, key=lambda x: x.score, reverse=True
-            )
+            recommendations = sorted(recommendations, key=lambda x: x.score, reverse=True)
         return recommendations[:top_k]

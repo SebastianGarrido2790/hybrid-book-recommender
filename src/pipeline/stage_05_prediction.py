@@ -4,10 +4,11 @@ It loads the model from the specified configuration and runs a set of test queri
 Results are saved to a text file in the artifacts/prediction directory.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.batch_prediction import BatchPrediction
-from src.utils.exception import CustomException
 import sys
+
+from src.components.batch_prediction import BatchPrediction
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
 STAGE_NAME = "Prediction Pipeline"

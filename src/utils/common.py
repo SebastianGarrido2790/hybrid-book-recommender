@@ -3,19 +3,21 @@ Common utility functions for configuration management, directory orchestration,
 and data serialization to support reproducible MLOps pipelines.
 """
 
-import os
-from box.exceptions import BoxValueError
-import yaml
-from src.utils.logger import get_logger
-from src.utils.paths import PROJECT_ROOT
 import json
-import joblib
-from ensure import ensure_annotations
-from box import ConfigBox
-from pathlib import Path
-from src.utils.exception import CustomException
-from typing import Any
+import os
 import sys
+from pathlib import Path
+from typing import Any
+
+import joblib
+import yaml
+from box import ConfigBox
+from box.exceptions import BoxValueError
+from ensure import ensure_annotations
+
+from src.constants import PROJECT_ROOT
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -91,9 +93,7 @@ def save_bin(data: Any, path: Path) -> None:
     Saves data as a binary file (pickle) using joblib.
     """
     joblib.dump(value=data, filename=path)
-    logger.info(
-        f"binary file saved at: {Path(path).resolve().relative_to(PROJECT_ROOT)}"
-    )
+    logger.info(f"binary file saved at: {Path(path).resolve().relative_to(PROJECT_ROOT)}")
 
 
 @ensure_annotations
@@ -102,9 +102,7 @@ def load_bin(path: Path) -> Any:
     Loads data from a binary file.
     """
     data = joblib.load(path)
-    logger.info(
-        f"binary file loaded from: {Path(path).resolve().relative_to(PROJECT_ROOT)}"
-    )
+    logger.info(f"binary file loaded from: {Path(path).resolve().relative_to(PROJECT_ROOT)}")
     return data
 
 

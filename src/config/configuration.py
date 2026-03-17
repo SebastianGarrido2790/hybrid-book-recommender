@@ -9,26 +9,28 @@ integrating with DVC for data versioning.
 providing a robust and reproducible interface for all downstream pipeline components.
 """
 
+import os
+import sys
+from pathlib import Path
+
 import dvc.api
 from box import ConfigBox
 
-from src.utils.common import read_yaml, create_directories
+from src.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
 from src.entity.config_entity import (
-    DataIngestionConfig,
-    DataValidationConfig,
-    DataTransformationConfig,
+    BatchPredictionConfig,
     DataEnrichmentConfig,
-    ToneAnalysisConfig,
-    ModelTrainerConfig,
+    DataIngestionConfig,
+    DataTransformationConfig,
+    DataValidationConfig,
     InferenceConfig,
     ModelEvaluationConfig,
-    BatchPredictionConfig,
+    ModelTrainerConfig,
+    ToneAnalysisConfig,
 )
-from src.utils.paths import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT
-from pathlib import Path
-from src.utils.mlflow_config import get_mlflow_uri
+from src.utils.common import create_directories, read_yaml
 from src.utils.exception import CustomException
-import sys
+from src.utils.mlflow_config import get_mlflow_uri
 
 
 class ConfigurationManager:
@@ -46,8 +48,10 @@ class ConfigurationManager:
     """
 
     def __init__(
-        self, config_filepath=CONFIG_FILE_PATH, params_filepath=PARAMS_FILE_PATH
-    ):
+        self,
+        config_filepath: Path = CONFIG_FILE_PATH,
+        params_filepath: Path = PARAMS_FILE_PATH,
+    ) -> None:
         """
         Initializes the ConfigurationManager.
 
@@ -55,8 +59,6 @@ class ConfigurationManager:
             config_filepath (Path): Path to the static configuration file.
             params_filepath (Path): Path to the parameters file (tracked by DVC).
         """
-        import os
-
         try:
             self.config = read_yaml(config_filepath)
 
@@ -259,9 +261,7 @@ class ConfigurationManager:
 
             # 2. Fallback to Enriched Data
             if not data_path.exists():
-                data_path = (
-                    PROJECT_ROOT / self.config.data_enrichment.enriched_data_path
-                )
+                data_path = PROJECT_ROOT / self.config.data_enrichment.enriched_data_path
 
             # 3. Fallback to Clean Data (Base Level)
             if not data_path.exists():

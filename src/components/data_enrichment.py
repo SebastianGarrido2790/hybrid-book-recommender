@@ -8,14 +8,17 @@ WARNING: This process is CPU/GPU intensive.
 On a standard CPU, expect approx 0.5 - 1.0 seconds per book.
 """
 
+import sys
+from typing import Any
+
 import pandas as pd
+import torch
 from tqdm import tqdm
 from transformers import pipeline
-import torch
-import sys
+
 from src.entity.config_entity import DataEnrichmentConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -53,9 +56,7 @@ class DataEnrichment:
             # Fill NaNs in descriptions with empty string
             descriptions = df["description"].fillna("").tolist()
 
-            logger.info(
-                f"Initializing Zero-Shot Classification model: {self.config.model_name}"
-            )
+            logger.info(f"Initializing Zero-Shot Classification model: {self.config.model_name}")
             # Use CPU (-1) as per plan, but if GPU is available it could be used.
             device = 0 if torch.cuda.is_available() else -1
             if device == 0:
@@ -74,17 +75,22 @@ class DataEnrichment:
 
             new_categories = []
 
-            for i in tqdm(
-                range(0, len(descriptions), batch_size), desc="Classifying Descriptions"
-            ):
+            for i in tqdm(range(0, len(descriptions), batch_size), desc="Classifying Descriptions"):
                 batch = descriptions[i : i + batch_size]
 
                 # Zero-shot classification
-                results = classifier(batch, candidate_labels, multi_label=False)
+                results: Any = classifier(batch, candidate_labels, multi_label=False)
 
                 # Extract top labels
-                for res in results:
-                    new_categories.append(res["labels"][0])
+                if results:
+                    # results can be a single dict (if batch_size=1) or a list of dicts.
+                    # Ensure it's a list for iteration:
+                    if isinstance(results, dict):
+                        results = [results]
+
+                    for res in results:
+                        if res and "labels" in res:
+                            new_categories.append(str(res["labels"][0]))
 
             df["simple_category"] = new_categories
 

@@ -1,0 +1,16 @@
+columns:
+  isbn13: int
+  isbn10: str
+  title: str
+  subtitle: str
+  authors: str
+  categories: str
+  thumbnail: str
+  description: str
+  published_year: float
+  average_rating: float
+  num_pages: float
+  ratings_count: float
+
+target_column:
+  name: average_rating

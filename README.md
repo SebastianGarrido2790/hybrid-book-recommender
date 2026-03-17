@@ -90,35 +90,9 @@ uv run dvc repro
 ### 3. Launch the App
 Start the local server:
 ```bash
-uv run python app.py
+uv run python -m src.app.main
 ```
 Access the UI at: `http://localhost:7860`
-
----
-
-## 📂 Project Structure
-
-We follow a modular, component-based architecture.
-
-```text
-hybrid-book-recommender/
-├── .dvc/                   # DVC Config
-├── .github/                # CI/CD Workflows
-├── app.py                  # Gradio Application Entrypoint
-├── artifacts/              # Pipeline Artifacts (Gitignored)
-├── config/                 # Centralized Configuration (YAML)
-├── dvc.yaml                # Pipeline Definition (DAG)
-├── mlruns/                 # MLflow Local storage
-├── src/
-│   ├── components/         # Core Logic (Ingestion, Training, etc.)
-│   ├── entity/             # Data Classes (Type Safety)
-│   ├── models/             # Recommender Engine Logic
-│   ├── pipeline/           # Orchestration Scripts
-│   └── utils/              # Shared Utilities (Logging, Common)
-└── ...
-```
-
-See [Folder Structure](references/folder_structure.md) for details.
 
 ---
 

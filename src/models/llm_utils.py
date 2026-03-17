@@ -4,12 +4,14 @@ It ensures that both the Trainer (creating the DB) and the Recommender (querying
 """
 
 import os
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
-from typing import Any
 import sys
+from typing import Any
+
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -45,9 +47,7 @@ class EmbeddingFactory:
                         "GOOGLE_API_KEY not found in environment variables. Please check your .env file."
                     )
                 logger.info(f"Using Google Gemini Embeddings: {model_name}")
-                return GoogleGenerativeAIEmbeddings(
-                    model=model_name, google_api_key=api_key
-                )
+                return GoogleGenerativeAIEmbeddings(model=model_name)
             else:
                 raise ValueError(
                     f"Unsupported embedding provider: {provider}. Options: 'huggingface', 'gemini'."

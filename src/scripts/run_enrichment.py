@@ -8,11 +8,12 @@ Usage:
     uv run python -m src.scripts.run_enrichment
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.data_enrichment import DataEnrichment
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.data_enrichment import DataEnrichment
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Enrichment Script"
 logger = get_logger(headline=STAGE_NAME)

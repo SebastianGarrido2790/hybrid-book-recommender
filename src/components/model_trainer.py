@@ -5,17 +5,20 @@ It handles the generation of Vector Embeddings using a configurable provider (Hu
 
 import os
 import shutil
+import sys
+import time
+from typing import Any
+
 import pandas as pd
-from tqdm import tqdm
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
-from src.models.llm_utils import EmbeddingFactory
 from langchain_core.documents import Document
+from tqdm import tqdm
+
 from src.entity.config_entity import ModelTrainerConfig
-from src.utils.logger import get_logger
+from src.models.llm_utils import EmbeddingFactory
 from src.utils.exception import CustomException
-from typing import Any
-import sys
+from src.utils.logger import get_logger
 
 # Load environment variables (API Keys)
 load_dotenv()
@@ -74,9 +77,7 @@ class ModelTrainer:
 
             # Prepare Documents for LangChain
             documents = []
-            for _, row in tqdm(
-                df.iterrows(), total=len(df), desc="Preparing Context Documents"
-            ):
+            for _, row in tqdm(df.iterrows(), total=len(df), desc="Preparing Context Documents"):
                 # Safety checks for columns - using .get() for robustness
                 title = row.get("title", "Unknown Title")
                 authors = row.get("authors", "Unknown Author")
@@ -85,10 +86,7 @@ class ModelTrainer:
 
                 # Content: The text used for semantic similarity matching
                 content = (
-                    f"Title: {title}\n"
-                    f"Author: {authors}\n"
-                    f"Description: {desc}\n"
-                    f"Categories: {cats}"
+                    f"Title: {title}\nAuthor: {authors}\nDescription: {desc}\nCategories: {cats}"
                 )
 
                 # Metadata: The data returned when a match is found
@@ -115,9 +113,7 @@ class ModelTrainer:
             # Reset VectorDB for a fresh build
             # Since this is a training pipeline, we usually want to start fresh to avoid duplicates or stale data.
             if os.path.exists(persist_dir):
-                logger.warning(
-                    f"Removing existing VectorDB at {persist_dir} for fresh index."
-                )
+                logger.warning(f"Removing existing VectorDB at {persist_dir} for fresh index.")
                 shutil.rmtree(persist_dir)
 
             logger.info(f"Creating VectorDB at {persist_dir}...")
@@ -131,15 +127,9 @@ class ModelTrainer:
 
             # Batch add documents to manage memory and rate limits
             batch_size = self.config.batch_size
-            logger.info(
-                f"Indexing {len(documents)} documents in batches of {batch_size}..."
-            )
+            logger.info(f"Indexing {len(documents)} documents in batches of {batch_size}...")
 
-            import time
-
-            for i in tqdm(
-                range(0, len(documents), batch_size), desc="Indexing Batches"
-            ):
+            for i in tqdm(range(0, len(documents), batch_size), desc="Indexing Batches"):
                 batch = documents[i : i + batch_size]
 
                 # Robust retry logic for API Rate Limits (429)
@@ -153,26 +143,20 @@ class ModelTrainer:
                         if (
                             "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg
                         ) and attempt < max_retries - 1:
-                            wait_time = (
-                                attempt + 1
-                            ) * 15  # Incremental wait: 15s, 30s, 45s...
+                            wait_time = (attempt + 1) * 15  # Incremental wait: 15s, 30s, 45s...
                             logger.warning(
                                 f"⚠️ Rate limit hit (429). Waiting {wait_time}s before retry {attempt + 1}/{max_retries}..."
                             )
                             time.sleep(wait_time)
                         else:
-                            logger.error(
-                                f"❌ Permanent error during indexing batch {i}: {e}"
-                            )
+                            logger.error(f"❌ Permanent error during indexing batch {i}: {e}")
                             raise e
 
                 # Mandatory pause for Gemini Free Tier to stabilize TPM (Tokens Per Minute)
                 if self.config.embedding_provider.lower() == "gemini":
                     time.sleep(2)
 
-            logger.info(
-                f"✅ Successfully indexed {len(documents)} books into VectorDB."
-            )
+            logger.info(f"✅ Successfully indexed {len(documents)} books into VectorDB.")
 
         except Exception as e:
             raise CustomException(e, sys)

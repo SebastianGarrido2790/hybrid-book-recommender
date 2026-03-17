@@ -39,4 +39,27 @@ mlflow:
   uri: https://dagshub.com/SebastianGarrido2790/hybrid-book-recommender.mlflow  # Replace with your own MLflow tracking URI
   experiment_name: Hybrid-Book-Recommender-System  # Replace with your own experiment name
 
-  
+app:
+  max_results: 48
+  categories:
+    - "All"
+    - "Biography"
+    - "Fantasy"
+    - "Fiction"
+    - "History"
+    - "Non-Fiction"
+    - "Science"
+    - "Thriller"
+  tones:
+    - "All"
+    - "Happy"
+    - "Surprising"
+    - "Angry"
+    - "Suspenseful"
+    - "Sad"
+  tone_map:
+    Happy: "joy"
+    Surprising: "surprise"
+    Angry: "anger"
+    Suspenseful: "fear"
+    Sad: "sadness"

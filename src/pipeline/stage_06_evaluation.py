@@ -3,11 +3,12 @@ This module serves as the 'Conductor' for the Model Evaluation Stage.
 It orchestrates the execution of MLflow tracking and metric logging.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.model_evaluation import ModelEvaluation
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.model_evaluation import ModelEvaluation
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Model Evaluation Stage"
 logger = get_logger(headline=STAGE_NAME)

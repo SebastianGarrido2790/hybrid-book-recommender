@@ -1,90 +1,73 @@
 """
 Utility functions for MLflow configuration across modules.
-Fully environment-aware, using ENV loaded from src.utils.paths.
+Fully environment-aware.
 """
 
 import os
-import yaml
 from pathlib import Path
-from src.utils.paths import ENV  # Centralized environment detection
-from src.utils.logger import get_logger  # Centralized logging
+
+import yaml
+from dotenv import load_dotenv
+
+from src.constants import PARAMS_FILE_PATH
+from src.utils.logger import get_logger
+
+# Load environment variables from .env file
+load_dotenv()
 
 logger = get_logger(__name__)
 
+ENV = os.getenv("ENV", "local").lower()  # e.g., "local", "staging", "production"
 
-def get_mlflow_uri(params_path: str = "params.yaml") -> str:
+
+def get_mlflow_uri(params_path: Path = PARAMS_FILE_PATH) -> str:
     """
     Returns the MLflow Tracking URI with clear priority and automatic environment handling.
-    Detects the appropriate MLflow URI based on the current environment (ENV), checks environment variables, and falls back to params.yaml.
-    This function is a pure utility that does not rely on or call the mlflow library itself.
-    This isolation is crucial for testing and adaptability.
+    Detects the appropriate MLflow URI based on the current environment (ENV),
+    checks environment variables, and falls back to config/params.yaml.
 
     Priority:
-        1. Environment variable MLFLOW_TRACKING_URI (highest priority)
+        1. Environment variable MLFLOW_TRACKING_URI
         2. Environment-based defaults (production/staging/local)
         3. config/params.yaml (fallback for local mode)
 
-    ENV modes:
-        - production  → Use remote MLflow server (must be defined in env vars)
-        - staging     → Use test/staging tracking server (optional fallback)
-        - local       → Use params.yaml fallback or local ./mlruns directory
-
     Args:
-        params_path (str): Path to params.yaml (default: project root).
+        params_path (Path): Path to params.yaml (default: config/params.yaml).
 
     Returns:
         str: MLflow Tracking URI.
-
-    Raises:
-        RuntimeError: If no valid URI is found.
     """
 
-    # --- Priority 1: Environment variable (always takes precedence) ---
+    # --- Priority 1: Environment variable ---
     mlflow_uri = os.getenv("MLFLOW_TRACKING_URI")
     if mlflow_uri:
-        logger.info(f"[ENV={ENV}] Using MLflow from environment variable: {mlflow_uri}")
+        logger.info(f"[ENV={ENV}] Using MLflow URI from environment: {mlflow_uri}")
         return mlflow_uri
 
     # --- Priority 2: Environment-based defaults ---
     if ENV == "production":
-        raise RuntimeError(
-            "Production mode requires MLFLOW_TRACKING_URI to be set in environment variables."
-        )
+        # In production, we MUST have a tracking URI
+        raise RuntimeError("Production mode requires MLFLOW_TRACKING_URI to be set.")
 
     elif ENV == "staging":
-        default_staging_uri = "http://staging-mlflow-server:5000"
-        logger.info(
-            f"[ENV={ENV}] Using default staging MLflow URI: {default_staging_uri}"
-        )
-        return default_staging_uri
+        # Optional: Define a default staging server
+        staging_uri = "http://staging-mlflow-server:5000"
+        logger.info(f"[ENV={ENV}] Using staging MLflow URI: {staging_uri}")
+        return staging_uri
 
-    # --- Priority 3: YAML fallback (local mode only) ---
-    elif ENV == "local":
-        params_file = Path(params_path)
-        if not params_file.exists():
-            logger.warning(
-                f"params.yaml not found at {params_path}. Using local ./mlruns directory."
-            )
-            local_uri = "file:./mlruns"
-            logger.info(f"[ENV={ENV}] Using local MLflow URI: {local_uri}")
-            return local_uri
-
+    # --- Priority 3: YAML fallback (local mode) ---
+    if (params_file := Path(params_path)) and params_file.exists():
         try:
-            with open(params_file, "r") as f:
+            with open(params_file) as f:
                 params = yaml.safe_load(f)
-                mlflow_uri = params["mlflow"]["uri"]
-                logger.info(
-                    f"[ENV={ENV}] Using MLflow URI from params.yaml: {mlflow_uri}"
-                )
-                return mlflow_uri
-        except KeyError:
-            logger.warning("[ENV=local] Missing 'mlflow.uri' in params.yaml.")
-            local_uri = "file:./mlruns"
-            logger.info(f"[ENV={ENV}] Using fallback local MLflow URI: {local_uri}")
-            return local_uri
+                if params and "mlflow" in params and "uri" in params["mlflow"]:
+                    uri = params["mlflow"]["uri"]
+                    logger.info(f"[ENV={ENV}] Using MLflow URI from {params_path}: {uri}")
+                    return uri
+        except Exception as e:
+            logger.warning(f"Error reading {params_path}: {e}")
 
-    # --- No valid URI found ---
-    raise RuntimeError(
-        f"MLflow Tracking URI not found for ENV={ENV}. "
-        "Define MLFLOW_TRACKING_URI in your .env or system environment."
-    )
+    # Fallback for local
+    local_uri = "file:./mlruns"
+    logger.info(f"[ENV={ENV}] Using fallback local MLflow URI: {local_uri}")
+    return local_uri

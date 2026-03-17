@@ -9,26 +9,28 @@ This module validates the core recommendation logic, ensuring that:
 
 Usage Instructions:
     1. Run all tests:
-       uv run pytest src/tests
+       uv run pytest tests/
 
     2. Run tests with verbose output (recommended):
-       uv run pytest src/tests -vv
+       uv run pytest tests/ -vv
 
     3. Run a specific test module:
-       uv run pytest src/tests/test_recommender.py
+       uv run pytest tests/unit/test_recommender.py
 
     4. Run specific tests by keyword matching:
        uv run pytest -k "recommender"
 """
 
-import pytest
-import pandas as pd
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
+
+from src.constants import PROJECT_ROOT
 from src.entity.config_entity import InferenceConfig
 from src.models.hybrid_recommender import HybridRecommender
-from src.utils.paths import PROJECT_ROOT
-from typing import Dict, Any, Generator
-
 
 # --- Fixtures ---
 
@@ -70,7 +72,7 @@ def mock_books_data() -> pd.DataFrame:
 @pytest.fixture
 def mock_dependencies(
     mock_books_data: pd.DataFrame,
-) -> Generator[Dict[str, Any], None, None]:
+) -> Generator[dict[str, Any], None, None]:
     """
     Patches external dependencies (Chroma, EmbeddingFactory, pd.read_csv).
     Returns the set of mock objects for assertion.
@@ -78,9 +80,7 @@ def mock_dependencies(
     with (
         patch("src.models.hybrid_recommender.pd.read_csv") as mock_read_csv,
         patch("src.models.hybrid_recommender.Chroma") as mock_chroma,
-        patch(
-            "src.models.hybrid_recommender.EmbeddingFactory"
-        ) as mock_embedding_factory,
+        patch("src.models.hybrid_recommender.EmbeddingFactory") as mock_embedding_factory,
     ):
         # Setup specific return values
         mock_read_csv.return_value = mock_books_data
@@ -101,9 +101,7 @@ def mock_dependencies(
 # --- Tests ---
 
 
-def test_recommend_flow(
-    mock_config: InferenceConfig, mock_dependencies: Dict[str, Any]
-) -> None:
+def test_recommend_flow(mock_config: InferenceConfig, mock_dependencies: dict[str, Any]) -> None:
     """Verifies that the recommend method returns correctly calculated hybrid scores."""
 
     # 1. Setup Mock Vector Search Results
@@ -158,7 +156,7 @@ def test_recommend_flow(
 
 
 def test_recommend_with_filter(
-    mock_config: InferenceConfig, mock_dependencies: Dict[str, Any]
+    mock_config: InferenceConfig, mock_dependencies: dict[str, Any]
 ) -> None:
     """Verifies that category filtering correctly excludes mismatched items."""
 

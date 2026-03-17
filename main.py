@@ -8,9 +8,7 @@ Usage:
 
 # Initialize logger with headline BEFORE importing stages
 # This ensures "main.py" is the recorded headline for this process
-from src.utils.logger import get_logger, log_spacer
-
-logger = get_logger(headline="main.py")
+import sys
 
 from src.pipeline.stage_01_ingestion import DataIngestionTrainingPipeline
 from src.pipeline.stage_02_validation import DataValidationTrainingPipeline
@@ -19,7 +17,10 @@ from src.pipeline.stage_04_training import ModelTrainingPipeline
 from src.pipeline.stage_05_prediction import PredictionPipeline
 from src.pipeline.stage_06_evaluation import ModelEvaluationPipeline
 from src.utils.exception import CustomException
-import sys
+from src.utils.logger import get_logger, log_spacer
+
+# Initialize logger with headline AFTER all imports to satisfy E402
+logger = get_logger(headline="main.py")
 
 
 # 1. Data Ingestion

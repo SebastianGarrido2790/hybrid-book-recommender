@@ -4,7 +4,7 @@
 Build a modern, interactive web interface using **Gradio** to serve as the "Storefront" for the Hybrid Book Recommender. The UI will allow users to perform natural language searches, filter by category and emotional tone, and view results with a premium, AI-driven aesthetic.
 
 ## User Review
-> **IMPORTANT**
+> [!IMPORTANT]
 >
 > **Framework Switch**: We are switching from Streamlit to **Gradio** (using the `Blocks` API) to better align with the goal of showcasing ML models.
 >
@@ -16,19 +16,27 @@ Build a modern, interactive web interface using **Gradio** to serve as the "Stor
 [pyproject.toml](hybrid-book-recommender/pyproject.toml)
 - Add `gradio>=4.0.0`.
 
-### UI
-[app.py](hybrid-book-recommender/app.py)
-- **Engine Initialization**: Load `ConfigurationManager` and `HybridRecommender`.
-- **Layout (Gradio Blocks)**:
-    - **Header**: Project title and description with SVG icon.
-    - **Control Panel (Left Sidebar/Column)**:
-        - `Dropdown`: Category Filter (Logic: Fetch unique categories from metadata).
-        - `Radio/Dropdown`: Mood/Tone Filter (Joy, Fear, Sadness, etc.).
-    - **Main Area**:
-        - `Textbox`: Search bar (Natural Language Query).
-        - `Button`: Search trigger.
-        - `Markdown`: Results container (Iterative card display).
-- **Styling**: Inject vanilla CSS into `gr.Blocks(css=...)` to achieve a dark-mode, glassmorphism aesthetic.
+### UI Architecture (`src/app/`)
+The application is modularized to ensure separation of concerns:
+- **`main.py`**: Orchestrates the Gradio `Blocks` lifecycle and event handlers.
+- **`styles.py`**: Concentrates all CSS-in-Python and HTML templates for the glassmorphism UI.
+- **`data_loaders.py`**: Handles engine initialization and data formatting helpers.
+
+#### Layout (Gradio Blocks)
+- **Header**: Project title and description with SVG icon.
+- **Control Panel**:
+    - `Dropdown`: Category Filter (Logic: Load from `params.yaml`).
+    - `Dropdown`: Emotional Tone Filter (Joy, Fear, Sadness, etc.).
+- **Main Area**:
+    - `Textbox`: Search bar (Natural Language Query).
+    - `Gallery`: Result preview with hover captions.
+    - `HTML`: Interactive details view triggered by selection.
+
+### Styling
+Leverages `gr.themes.Glass()` as a base, with additional CSS injected for:
+- Dark-mode compatibility.
+- Interactive card effects.
+- Responsive container handling.
 
 ## Verification
 

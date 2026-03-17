@@ -1,5 +1,5 @@
-# Use official Python 3.12 slim image
-FROM python:3.12-slim
+# Use official Python 3.11 slim image
+FROM python:3.11-slim
 
 # Install uv directly from the official image
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
@@ -28,4 +28,4 @@ EXPOSE 7860
 
 # Run the application
 # uv run will automatically use the environment created by uv sync
-CMD ["uv", "run", "app.py"]
+CMD ["uv", "run", "python", "-m", "src.app.main"]

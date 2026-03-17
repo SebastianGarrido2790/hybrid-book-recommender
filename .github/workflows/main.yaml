@@ -29,11 +29,19 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Install Dependencies
-        run: uv sync --frozen
+      - name: Install Dependencies (including dev tools)
+        run: uv sync --extra dev
 
-      - name: Run Unit Tests
-        run: uv run pytest src/tests -v # This runs the tests we wrote in Phase 4.
+      - name: Lint & Format Check (Ruff)
+        run: |
+          uv run ruff format --check src/ tests/
+          uv run ruff check src/ tests/
+
+      - name: Type Check (Pyright)
+        run: uv run pyright src/
+
+      - name: Run Unit Tests with Coverage
+        run: uv run pytest tests/ --cov=src --cov-fail-under=25 --cov-report=term-missing -v
 
       # --- CI/CD: Docker Build & Push ---
       # 1. Authenticate with GitHub Container Registry (GHCR)

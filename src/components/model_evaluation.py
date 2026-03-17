@@ -8,19 +8,23 @@ Usage:
     Or run only the evaluation stage with:
         uv run python -m src.pipeline.stage_06_evaluation
     To view the tracked experiments, you can launch the MLflow UI:
-        uv run mlflow ui
+        uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
+        NOTE: This is what you need to run, because we configured the code to write
+        to this database in the .env file.
 """
 
-import pandas as pd
-import mlflow
-import mlflow.sklearn
-from urllib.parse import urlparse
-from src.entity.config_entity import ModelEvaluationConfig
-from src.utils.common import save_json
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
+
+import mlflow
+import mlflow.sklearn
+import pandas as pd
+
+from src.entity.config_entity import ModelEvaluationConfig
+from src.utils.common import save_json
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,24 +66,24 @@ class ModelEvaluation:
 
             # Simple metrics for a recommender index
             metrics = {
-                "num_test_records": len(test_data),
+                "num_test_records": float(len(test_data)),
             }
 
             # Save metrics locally
             save_json(path=Path(self.config.root_dir) / "metrics.json", data=metrics)
 
             # MLflow configuration
-            mlflow.set_registry_uri(self.config.mlflow_uri)
+            mlflow.set_tracking_uri(self.config.mlflow_uri)
             mlflow.set_experiment(self.config.experiment_name)
             tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
             from datetime import datetime
 
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            provider = self.config.all_params.model_trainer.embedding_provider
-            model_short_name = self.config.all_params.model_trainer.model_name.split(
-                "/"
-            )[-1]
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+            # all_params is a dict at type-check time, so use bracket access
+            provider = self.config.all_params["model_trainer"]["embedding_provider"]
+            model_full_name = self.config.all_params["model_trainer"]["model_name"]
+            model_short_name = str(model_full_name).split("/")[-1]
             run_name = f"{provider}_{model_short_name}_{timestamp}"
 
             with mlflow.start_run(run_name=run_name):

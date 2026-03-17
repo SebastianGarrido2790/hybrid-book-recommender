@@ -4,12 +4,13 @@ It handles the data ingestion process from a remote source.
 """
 
 import os
+import sys
 import urllib.request as request
 import zipfile
-import sys
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
+
 from src.entity.config_entity import DataIngestionConfig
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

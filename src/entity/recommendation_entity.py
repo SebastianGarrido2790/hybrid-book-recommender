@@ -6,7 +6,6 @@ This prevents "stringly-typed" errors in the UI layer and ensures deep code inte
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -24,7 +23,7 @@ class RecommendationResult:
         tone_prob (float): The probability of the tone.
         rating (float): The rating of the book.
         ratings_count (int): The number of ratings for the book.
-        thumbnail (Optional[str]): The thumbnail of the book.
+        thumbnail (str | None): The thumbnail of the book.
         score (float): The score of the book.
         match_reason (str): The reason for the match.
     """
@@ -38,6 +37,6 @@ class RecommendationResult:
     tone_prob: float
     rating: float
     ratings_count: int
-    thumbnail: Optional[str]
+    thumbnail: str | None
     score: float
     match_reason: str

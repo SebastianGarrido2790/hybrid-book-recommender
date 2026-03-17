@@ -5,11 +5,14 @@ It handles the train-test-validation split for model development and evaluation.
 
 import os
 import sys
+from typing import Any
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
+
 from src.entity.config_entity import DataTransformationConfig
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -46,31 +49,31 @@ class DataTransformation:
             logger.info(f"Loaded CLEAN data from {data_path} with shape {df.shape}")
 
             # Perform 3-Way Split
-            train_df, temp_df = train_test_split(
+            # Using Any to satisfy strict type checkers about split result being a list/tuple
+            split_1: Any = train_test_split(
                 df,
                 test_size=self.config.test_size,
                 random_state=self.config.random_state,
             )
+            train_df, temp_df = split_1
 
-            val_df, test_df = train_test_split(
+            split_2: Any = train_test_split(
                 temp_df,
                 test_size=self.config.val_size,
                 random_state=self.config.random_state,
             )
+            val_df, test_df = split_2
 
             logger.info(
                 f"Split Ratios - Train: {len(train_df)}, Val: {len(val_df)}, Test: {len(test_df)}"
             )
 
-            train_df.to_csv(
-                os.path.join(self.config.root_dir, "train.csv"), index=False
-            )
+            # Explicitly use pandas to_csv
+            train_df.to_csv(os.path.join(self.config.root_dir, "train.csv"), index=False)
             val_df.to_csv(os.path.join(self.config.root_dir, "val.csv"), index=False)
             test_df.to_csv(os.path.join(self.config.root_dir, "test.csv"), index=False)
 
-            logger.info(
-                f"Transformation Completed. Artifacts saved to {self.config.root_dir}"
-            )
+            logger.info(f"Transformation Completed. Artifacts saved to {self.config.root_dir}")
 
         except Exception as e:
             raise CustomException(e, sys)

@@ -3,16 +3,18 @@ This module serves as the 'Worker' for the Tone Analysis Stage of the pipeline.
 It handles the extraction of emotional tone from book descriptions using a pre-trained Transformer model.
 """
 
+import re
+import sys
+from typing import Any
+
 import pandas as pd
+import torch
 from tqdm import tqdm
 from transformers import pipeline
-import torch
-import re
+
 from src.entity.config_entity import ToneAnalysisConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
-from typing import List
-import sys
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -29,7 +31,7 @@ class ToneAnalysis:
     def __init__(self, config: ToneAnalysisConfig):
         self.config = config
 
-    def _split_into_sentences(self, text: str) -> List[str]:
+    def _split_into_sentences(self, text: str) -> list[str]:
         """
         Splits text into sentences using a robust regex.
         """
@@ -81,7 +83,7 @@ class ToneAnalysis:
 
             logger.info("Processing books using Sentence-Level Analysis...")
 
-            for idx, row in tqdm(
+            for _idx, row in tqdm(
                 df.iterrows(), total=len(df), desc="Analyzing Books (Sentence-Level)"
             ):
                 description = str(row.get("description", ""))
@@ -89,9 +91,7 @@ class ToneAnalysis:
 
                 if not sentences:
                     book_dominant_tones.append("neutral")
-                    emotion_scores_list.append(
-                        {emotion: 0.0 for emotion in self.config.target_emotions}
-                    )
+                    emotion_scores_list.append(dict.fromkeys(self.config.target_emotions, 0.0))
                     continue
 
                 try:
@@ -102,35 +102,31 @@ class ToneAnalysis:
                         f"Error classifying sentences for book '{row.get('title')}': {e}. Falling back to neutral."
                     )
                     book_dominant_tones.append("neutral")
-                    emotion_scores_list.append(
-                        {emotion: 0.0 for emotion in self.config.target_emotions}
-                    )
+                    emotion_scores_list.append(dict.fromkeys(self.config.target_emotions, 0.0))
                     continue
 
-                emotion_sums = {emotion: 0.0 for emotion in self.config.target_emotions}
+                emotion_sums = dict.fromkeys(self.config.target_emotions, 0.0)
                 num_sentences = len(results)
 
                 for sentence_result in results:
+                    # sentence_result is a list of dicts: [{'label': 'joy', 'score': 0.9}, ...]
                     for emotion_score in sentence_result:
-                        label = emotion_score["label"]
-                        score = emotion_score["score"]
+                        # Cast to Any to satisfy Pyright about dictionary indexing
+                        es_any: Any = emotion_score
+                        label = str(es_any["label"])
+                        score = float(es_any["score"])
                         if label in emotion_sums:
                             emotion_sums[label] += score
 
                 emotion_averages = {
-                    label: score / num_sentences
-                    for label, score in emotion_sums.items()
+                    label: score / num_sentences for label, score in emotion_sums.items()
                 }
                 emotion_scores_list.append(emotion_averages)
 
                 non_neutral_averages = {
-                    label: score
-                    for label, score in emotion_averages.items()
-                    if label != "neutral"
+                    label: score for label, score in emotion_averages.items() if label != "neutral"
                 }
-                top_non_neutral = max(
-                    non_neutral_averages, key=non_neutral_averages.get
-                )
+                top_non_neutral = max(non_neutral_averages, key=lambda k: non_neutral_averages[k])
                 top_non_neutral_score = non_neutral_averages[top_non_neutral]
 
                 if top_non_neutral_score > 0.15:

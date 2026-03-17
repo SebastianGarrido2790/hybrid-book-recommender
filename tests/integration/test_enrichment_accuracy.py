@@ -20,19 +20,24 @@ Usage Instructions:
        uv run pytest -k "enrichment"
 """
 
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
 import os
 import sys
-from src.utils.logger import get_logger
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import pytest
+import seaborn as sns
+from sklearn.metrics import classification_report, confusion_matrix
+
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Enrichment Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
+@pytest.mark.integration
 def test_enrichment_accuracy() -> None:
     """
     Evaluates the accuracy of the Zero-Shot Enricher by comparing predictions
@@ -48,11 +53,10 @@ def test_enrichment_accuracy() -> None:
         CustomException: If evaluation fails.
     """
     try:
-        data_path = "artifacts/data_enrichment/enriched_books.csv"
+        config_manager = ConfigurationManager()
+        data_path = config_manager.get_data_enrichment_config().enriched_data_path
         if not os.path.exists(data_path):
-            logger.error(
-                f"Enriched data not found at {data_path}. Please run enrichment first."
-            )
+            logger.error(f"Enriched data not found at {data_path}. Please run enrichment first.")
             return
 
         logger.info("Loading enriched dataset...")
@@ -88,9 +92,7 @@ def test_enrichment_accuracy() -> None:
         # but our mapping expects 'Fiction' if it's about fiction. This reflects the limitation
         # mentioned by the user.
 
-        logger.info(
-            f"Evaluating accuracy on {len(df_test)} high-confidence labeled books."
-        )
+        logger.info(f"Evaluating accuracy on {len(df_test)} high-confidence labeled books.")
 
         # 4. Generate Metrics
         y_true = df_test["ground_truth"]
@@ -99,21 +101,21 @@ def test_enrichment_accuracy() -> None:
         # Filter out prediction labels that aren't in our ground truth sub-analysis if needed
         # but here we want to see how the model performed overall.
 
-        unique_labels = sorted(list(set(y_true) | set(y_pred)))
+        unique_labels = sorted(set(y_true) | set(y_pred))
 
         report = classification_report(y_true, y_pred, zero_division=0)
 
-        print("\n" + "=" * 60)
-        print("ZERO-SHOT CLASSIFICATION ACCURACY REPORT")
-        print("=" * 60)
-        print("Comparing: 'categories' (Original) vs 'simple_category' (Zero-Shot)")
-        print(f"Sample Size: {len(df_test)} books")
-        print("-" * 60)
-        print(report)
-        print("=" * 60)
+        logger.info("\n" + "=" * 60)
+        logger.info("ZERO-SHOT CLASSIFICATION ACCURACY REPORT")
+        logger.info("=" * 60)
+        logger.info("Comparing: 'categories' (Original) vs 'simple_category' (Zero-Shot)")
+        logger.info(f"Sample Size: {len(df_test)} books")
+        logger.info("-" * 60)
+        logger.info(f"\n{report}")
+        logger.info("=" * 60)
 
         # 5. Output Confusion Matrix
-        unique_labels = sorted(list(set(y_true) | set(y_pred)))
+        unique_labels = sorted(set(y_true) | set(y_pred))
         cm = confusion_matrix(y_true, y_pred, labels=unique_labels)
 
         plt.figure(figsize=(10, 8))

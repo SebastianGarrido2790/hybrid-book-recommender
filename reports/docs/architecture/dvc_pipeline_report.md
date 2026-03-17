@@ -118,7 +118,7 @@ One of the primary benefits of DVC is the ability for any team member to clone t
 #### 1. Clone the Repository
 Start by cloning the git repository and navigating into it.
 ```bash
-git clone <repo_url>
+git clone https://github.com/SebastianGarrido2790/hybrid-book-recommender.git
 cd hybrid-book-recommender
 ```
 

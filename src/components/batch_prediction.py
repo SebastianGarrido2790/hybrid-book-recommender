@@ -3,11 +3,12 @@ This module contains the BatchPrediction component, which runs inference on a se
 and saves the results to a file, satisfying the 'heavy lifting' requirement.
 """
 
+import sys
+
 from src.entity.config_entity import BatchPredictionConfig, InferenceConfig
 from src.models.hybrid_recommender import HybridRecommender
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
-import sys
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -54,17 +55,14 @@ class BatchPrediction:
             with open(output_file, "w", encoding="utf-8") as f:
                 for query in queries:
                     logger.info(f"🔍 Testing Query: {query}")
-                    print(f"\n🔍 Query: {query}")
-                    print("-" * 60)
+                    logger.info("-" * 60)
                     f.write(f"\n🔍 Query: {query}\n")
                     f.write("-" * 60 + "\n")
 
                     try:
                         results = self.recommender.recommend(query)
                     except Exception as e:
-                        logger.error(
-                            f"Failed to get recommendations for query '{query}': {e}"
-                        )
+                        logger.error(f"Failed to get recommendations for query '{query}': {e}")
                         f.write(f"Error: {e}\n")
                         continue
 
@@ -75,24 +73,20 @@ class BatchPrediction:
                             f"(Rating: {book.rating}, Score: {book.score:.3f})"
                         )
 
-                        print(result_str)
-                        print(f"   Author: {book.authors}")
+                        logger.info(result_str)
+                        logger.info(f"   Author: {book.authors}")
 
                         f.write(result_str + "\n")
                         f.write(f"   Author: {book.authors}\n")
 
                         desc = book.description
                         desc_preview = (
-                            desc[:100].replace("\n", " ") + "..."
-                            if desc
-                            else "No description"
+                            desc[:100].replace("\n", " ") + "..." if desc else "No description"
                         )
-                        print(f"   Desc: {desc_preview}")
+                        logger.info(f"   Desc: {desc_preview}")
                         f.write(f"   Desc: {desc_preview}\n")
 
-            logger.info(
-                f"Batch prediction for {len(queries)} queries completed successfully."
-            )
+            logger.info(f"Batch prediction for {len(queries)} queries completed successfully.")
 
         except Exception as e:
             raise CustomException(e, sys)

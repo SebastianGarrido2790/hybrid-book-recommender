@@ -17,19 +17,24 @@ Usage Instructions:
        uv run pytest -k "broad"
 """
 
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
 import os
 import sys
-from src.utils.logger import get_logger
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import pytest
+import seaborn as sns
+from sklearn.metrics import classification_report, confusion_matrix
+
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Broad Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
+@pytest.mark.integration
 def test_broad_accuracy() -> None:
     """
     Evaluates accuracy using broad masks (Fiction vs Non-Fiction).
@@ -44,7 +49,8 @@ def test_broad_accuracy() -> None:
         CustomException: If evaluation fails.
     """
     try:
-        data_path = "artifacts/data_enrichment/enriched_books.csv"
+        config_manager = ConfigurationManager()
+        data_path = config_manager.get_data_enrichment_config().enriched_data_path
         if not os.path.exists(data_path):
             logger.warning(f"Skipping test_broad_accuracy: {data_path} not found.")
             return
@@ -74,11 +80,11 @@ def test_broad_accuracy() -> None:
 
         report = classification_report(y_true, y_pred)
 
-        print("\n" + "=" * 60)
-        print("BROAD (FICTION VS NON-FICTION) ACCURACY REPORT")
-        print("=" * 60)
-        print(report)
-        print("=" * 60)
+        logger.info("\n" + "=" * 60)
+        logger.info("BROAD (FICTION VS NON-FICTION) ACCURACY REPORT")
+        logger.info("=" * 60)
+        logger.info(f"\n{report}")
+        logger.info("=" * 60)
 
         # 3. Output Confusion Matrix
         labels = ["Broad_Fiction", "Broad_NonFiction"]

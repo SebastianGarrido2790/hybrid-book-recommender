@@ -1,9 +1,4 @@
-import sys
-import os
 import pytest
-
-# Add the project root to the python path so imports like 'src.models...' work
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from src.utils.logger import get_logger
 

@@ -4,11 +4,12 @@ It manages the transition from raw data configuration to local availability
 by orchestrating the DataIngestion component.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.data_ingestion import DataIngestion
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.data_ingestion import DataIngestion
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Ingestion Stage"
 logger = get_logger(headline=STAGE_NAME)

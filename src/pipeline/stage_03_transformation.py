@@ -4,11 +4,12 @@ It orchestrates the execution of data cleaning and splitting by managing configu
 and triggering the DataTransformation component.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.data_transformation import DataTransformation
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.data_transformation import DataTransformation
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Transformation Stage"
 logger = get_logger(headline=STAGE_NAME)

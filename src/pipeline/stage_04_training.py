@@ -4,11 +4,12 @@ It orchestrates the execution of vector database building by managing configurat
 and triggering the ModelTrainer component.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.model_trainer import ModelTrainer
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.model_trainer import ModelTrainer
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Model Training Stage"
 logger = get_logger(headline=STAGE_NAME)

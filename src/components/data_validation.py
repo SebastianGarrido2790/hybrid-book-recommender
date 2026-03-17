@@ -4,10 +4,13 @@ It handles the data cleaning and validation process to ensure data quality.
 """
 
 import sys
+from typing import Any
+
 import pandas as pd
+
 from src.entity.config_entity import DataValidationConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -38,7 +41,7 @@ class DataValidation:
         """
         try:
             logger.info(f"Loading raw data from {self.config.unzip_data_dir}")
-            df = pd.read_csv(self.config.unzip_data_dir)
+            df: Any = pd.read_csv(self.config.unzip_data_dir)
             initial_shape = df.shape
 
             # 1. Drop missing critical fields
@@ -46,20 +49,19 @@ class DataValidation:
 
             # 2. Filter by description length
             if "description" in df.columns:
-                df = df[df["description"].str.len() > self.config.min_desc_len]
+                desc_series: Any = df["description"]
+                df = df[desc_series.str.len() > self.config.min_desc_len]
 
             # 3. Clean Text Artifacts (Categories/Authors)
             # Removes brackets ['Fiction'] -> Fiction
             if "categories" in df.columns:
-                df["categories"] = (
-                    df["categories"].astype(str).str.replace(r"[\[\]']", "", regex=True)
-                )
-                df = df[df["categories"].str.len() > self.config.categories_min_len]
+                cat_series: Any = df["categories"]
+                df["categories"] = cat_series.astype(str).str.replace(r"[\[\]']", "", regex=True)
+                df = df[cat_series.str.len() > self.config.categories_min_len]
 
             if "authors" in df.columns:
-                df["authors"] = (
-                    df["authors"].astype(str).str.replace(r"[\[\]']", "", regex=True)
-                )
+                auth_series: Any = df["authors"]
+                df["authors"] = auth_series.astype(str).str.replace(r"[\[\]']", "", regex=True)
 
             # 4. Deduplicate
             df = df.drop_duplicates(subset=["isbn13"])

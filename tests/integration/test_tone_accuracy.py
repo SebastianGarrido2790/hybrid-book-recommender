@@ -17,18 +17,23 @@ Usage Instructions:
        uv run pytest -k "tone"
 """
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 import sys
-from src.utils.logger import get_logger
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import pytest
+import seaborn as sns
+
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Tone Accuracy Test"
 logger = get_logger(headline=STAGE_NAME)
 
 
+@pytest.mark.integration
 def test_tone_accuracy() -> None:
     """
     Evaluates the accuracy of the Tone Classifier by performing a 'Vibe Check'
@@ -43,13 +48,12 @@ def test_tone_accuracy() -> None:
         CustomException: If test fails.
     """
     try:
-        data_path = "artifacts/tone_analysis/toned_books.csv"
+        config_manager = ConfigurationManager()
+        data_path = config_manager.get_tone_analysis_config().output_path
 
         # Verify file exists
         if not os.path.exists(data_path):
-            logger.error(
-                f"Toned data not found at {data_path}. Run tone analysis first."
-            )
+            logger.error(f"Toned data not found at {data_path}. Run tone analysis first.")
             return
 
         df = pd.read_csv(data_path)
@@ -59,28 +63,26 @@ def test_tone_accuracy() -> None:
         sample_size = min(len(df), 20)
         sample = df.sample(n=sample_size)
 
-        print("\n" + "=" * 80)
-        print("TONE ANALYSIS VIBE CHECK (Random Sample)")
-        print("=" * 80)
-        print(f"{'TITLE':<40} | {'TONE':<10} | {'DESCRIPTION SNIPPET'}")
-        print("-" * 80)
+        logger.info("\n" + "=" * 80)
+        logger.info("TONE ANALYSIS VIBE CHECK (Random Sample)")
+        logger.info("=" * 80)
+        logger.info(f"{'TITLE':<40} | {'TONE':<10} | {'DESCRIPTION SNIPPET'}")
+        logger.info("-" * 80)
 
         for _, row in sample.iterrows():
-            title = (
-                row["title"][:37] + "..." if len(row["title"]) > 37 else row["title"]
-            )
+            title = row["title"][:37] + "..." if len(row["title"]) > 37 else row["title"]
             tone = str(row["dominant_tone"]).upper()
             desc = str(row["description"])[:60].replace("\n", " ") + "..."
 
-            print(f"{title:<40} | {tone:<10} | {desc}")
+            logger.info(f"{title:<40} | {tone:<10} | {desc}")
 
-        print("=" * 80)
+        logger.info("=" * 80)
         logger.info("Tone 'Vibe Check' completed.")
 
         # 2. Global Tone Distribution Stats
-        print("\nGlobal Tone Distribution:")
+        logger.info("\nGlobal Tone Distribution:")
         counts = df["dominant_tone"].value_counts()
-        print(counts)
+        logger.info(f"\n{counts}")
 
         # 3. Visualization
         logger.info("Generating tone distribution plot...")
@@ -98,7 +100,13 @@ def test_tone_accuracy() -> None:
             "disgust": "#556B2F",  # DarkOliveGreen
         }
 
-        sns.barplot(x=counts.index, y=counts.values, palette=emotion_colors)
+        sns.barplot(
+            x=counts.index,
+            y=counts.values,
+            hue=counts.index,
+            palette=emotion_colors,
+            legend=False,
+        )
         plt.title("Distribution of Emotional Tones in Book Collection", fontsize=15)
         plt.xlabel("Emotional Tone", fontsize=12)
         plt.ylabel("Number of Books", fontsize=12)

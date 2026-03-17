@@ -5,11 +5,11 @@ This document details the successful execution of **Phase 4: Deployment**, trans
 
 The deployment strategy focuses on **Reliability**, **Portability**, and **Automation**. We have established a robust testing framework to catch regressions, a Docker container for consistent execution across environments, and a GitHub Actions workflow to automate the build verification process.
 
-## 2. Testing Framework (`src/tests`)
+## 2. Testing Framework (`tests`)
 A comprehensive testing suite has been implemented using **`pytest`** to ensure the reliability of the core recommendation logic before it reaches production. We selected `pytest` over `unittest` for its simplicity, scalability, and ability to handle complex test scenarios with minimal boilerplate.
 
 ### **Unit Tests**
-*   **Location:** `src/tests/test_recommender.py`
+*   **Location:** `tests/test_recommender.py`
 *   **Scope:** Verifies the functionality of the `HybridRecommender` class.
 *   **Framework Features Used:**
     *   **Fixtures:** Modular setup functions (annotated with `@pytest.fixture`) are used to inject mock configurations and data (`mock_config`, `mock_dependencies`). This replaces the rigid `setUp()` method of `unittest`.
@@ -23,8 +23,8 @@ A comprehensive testing suite has been implemented using **`pytest`** to ensure 
     *   `test_recommend_with_filter`: Verifies that hard filters (Category/Tone) correctly exclude non-matching candidates (Use Case: Filtered Search).
 
 ### **Test Configuration**
-*   **ConfTest:** `src/tests/conftest.py` ensures that the project root is strictly added to `sys.path`, preventing `ModuleNotFoundError` during test discovery.
-*   **Execution:** Tests are executed via `uv run pytest src/tests`, ensuring they run within the deterministic lockfile environment.
+*   **ConfTest:** `tests/conftest.py` ensures that the project root is strictly added to `sys.path`, preventing `ModuleNotFoundError` during test discovery.
+*   **Execution:** Tests are executed via `uv run pytest tests`, ensuring they run within the deterministic lockfile environment.
 
 ## 3. Containerization Strategy (Docker)
 The application has been packaged into a Docker container to guarantee **"Build Once, Run Anywhere"** portability.
@@ -83,7 +83,7 @@ To simulate the GitHub Actions pipeline locally:
 uv sync --frozen
 
 # 2. Run Unit Tests
-uv run pytest src/tests -v
+uv run pytest tests -v
 
 # 3. Build Docker Image
 docker build . -t hybrid-recommender:latest

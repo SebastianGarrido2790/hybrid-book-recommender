@@ -63,7 +63,7 @@ TONE_MAP = {
     "Sad": "sadness",
 }
 
-PLACEHOLDER_IMG_ABS = os.path.abspath("assets/placeholder.png")
+PLACEHOLDER_IMG_ABS = os.path.abspath("reports/figures/placeholder.png")
 PLACEHOLDER_IMG_URL = PLACEHOLDER_IMG_ABS
 
 

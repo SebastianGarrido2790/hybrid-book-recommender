@@ -1,8 +1,8 @@
 # Hybrid Book Recommender — Codebase Review & Production Readiness Assessment
 
 | **Date** | 2026-03-17 |
-| **Version** | v1.1 |
-| **Overall Score** | **8.5 / 10** |
+| **Version** | v1.2 |
+| **Overall Score** | **9.5 / 10** |
 | **Status** | **PRODUCTION-READY** |
 
 **Scope:** Full codebase — 22 Python source files, 4 test files + conftest, 1 CI workflow, 2 YAML configs, 1 Dockerfile + deploy script, `pyproject.toml`, Gradio application (`src/app/`), and 13 documentation files across 6 subdirectories.

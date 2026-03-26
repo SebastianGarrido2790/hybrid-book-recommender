@@ -2,10 +2,10 @@
 Deterministic tools for the Book Recommender Agent.
 
 These are the 'Brawn' — pure deterministic functions that the Agent 'Brain' calls
-to interact with the HybridRecommender engine (Rule 1.2: Brain vs. Brawn).
+to interact with the HybridRecommender engine (Brain vs. Brawn).
 
-Each tool has a rich docstring so the LLM understands its capabilities (Rule 1.7).
-Input validation is handled via typed parameters with Pydantic validation (Rule 1.3).
+Each tool has a rich docstring so the LLM understands its capabilities.
+Input validation is handled via typed parameters with Pydantic validation.
 """
 
 from dataclasses import dataclass

@@ -113,7 +113,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 
 ---
 
-### 2.2 ~~CRITICAL: Missing `.env.example` File (Rule 2.10)~~ ✅ ADDRESSED (v1.1)
+### 2.2 ~~CRITICAL: Missing `.env.example` File~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** A `.env.example` file has been created at the project root with placeholder values for all three required environment variables. The `MLFLOW_TRACKING_URI` now defaults to `sqlite:///mlflow.db` — enabling zero-config local tracking without needing a running server.
 >
@@ -129,7 +129,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 
 ---
 
-### 2.3 ~~CRITICAL: No `pyright` Configuration or CI Enforcement (Rule 2.8)~~ ✅ ADDRESSED (v1.1)
+### 2.3 ~~CRITICAL: No `pyright` Configuration or CI Enforcement~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** Full type safety enforcement is now active:
 > - `[tool.pyright]` (`pythonVersion = "3.11"`, `typeCheckingMode = "standard"`) added to `pyproject.toml`.
@@ -141,7 +141,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 > *(Original gap details preserved below for history)*
 
 > [!WARNING]
-> `pyproject.toml` contains **no** `[tool.pyright]` section, no `pyright` in dependencies, and no type-checking CI step. The "100% type hint coverage" and "strict typing" standards from your rules are not enforced.
+> `pyproject.toml` contains **no** `[tool.pyright]` section, no `pyright` in dependencies, and no type-checking CI step. The "100% type hint coverage" and "strict typing" standards are not enforced.
 
 **Gaps found:**
 - `ConfigurationManager.__init__` parameters `config_filepath` and `params_filepath` have no type annotations
@@ -150,7 +150,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 
 ---
 
-### 2.4 ~~CRITICAL: No `ruff` Configuration in `pyproject.toml` (Rule 2.8)~~ ✅ ADDRESSED (v1.1)
+### 2.4 ~~CRITICAL: No `ruff` Configuration in `pyproject.toml`~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** Full `[tool.ruff]` and `[tool.ruff.lint]` sections are live in `pyproject.toml`. `black` and `isort` have been removed from production dependencies. `ruff>=0.11.0` is in `[project.optional-dependencies] dev`. A comprehensive rule set including `E`, `F`, `I`, `UP`, `N`, `W`, `B`, `SIM`, `C4`, `RUF` is enforced on every validation run. `ruff format` is the sole authoritative formatter.
 >
@@ -159,15 +159,15 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 > [!WARNING]
 > There is no `[tool.ruff]` section in `pyproject.toml`. `black>=25.11.0` and `isort>=7.0.0` are listed as main dependencies, which directly contradicts the standard.
 
-| Dependency | Status | Rule Violation |
+| Dependency | Status | Violation |
 |:---|:---|:---|
 | `black>=25.11.0` | Listed as production dependency | Should be removed; `ruff format` is the sole formatter |
 | `isort>=7.0.0` | Listed as production dependency | Should be removed; `ruff` handles import sorting |
-| `ruff` | **Missing** | Mandatory per rules |
+| `ruff` | **Missing** | Mandatory for this project |
 
 ---
 
-### 2.5 ~~CRITICAL: Bare `dict` Field in Config Entity (Rule 2.3)~~ ✅ ADDRESSED (v1.1)
+### 2.5 ~~CRITICAL: Bare `dict` Field in Config Entity~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** `ModelEvaluationConfig.all_params` has been given explicit type parameters: `dict[str, Any]`. The field now carries full type information and is validated by `pyright` on every run. YAML key typos produce a `KeyError` with traceback immediately — not silently.
 >
@@ -215,7 +215,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 
 ---
 
-### 2.8 ~~HIGH: No `schema.yaml` — No Data Contracts (Rule 2.1)~~ ✅ ADDRESSED (v1.2)
+### 2.8 ~~HIGH: No `schema.yaml` — No Data Contracts~~ ✅ ADDRESSED (v1.2)
 
 > **UPDATE (v1.2):** A comprehensive `config/schema.yaml` has been implemented to define data contracts. It maps logical column names (e.g., `isbn`, `title`) to physical CSV columns and enforces strict data types for validation. All components now reference logical names via the `ConfigurationManager.schema`, ensuring that upstream CSV changes only require a single YAML update.
 >
@@ -223,7 +223,7 @@ The **Hybrid Book Recommender** is a **state-of-the-art AI application** that de
 
 > [!IMPORTANT]
 
-> There is no `schema.yaml` file to define data contracts. Column names like `"description"`, `"isbn13"`, `"categories"`, `"simple_category"`, `"dominant_tone"`, `"average_rating"`, `"ratings_count"` are hardcoded as strings across 8+ files. This violates the rule: *"Integrate `schema.yaml` into the data validation pipeline to enforce strict Data Contracts."*
+> There is no `schema.yaml` file to define data contracts. Column names like `"description"`, `"isbn13"`, `"categories"`, `"simple_category"`, `"dominant_tone"`, `"average_rating"`, `"ratings_count"` are hardcoded as strings across 8+ files. This violates the architectural decision: *"Integrate `schema.yaml` into the data validation pipeline to enforce strict Data Contracts."*
 
 **Impact:** If the upstream CSV schema changes (e.g., column rename), multiple files break silently with `KeyError` at runtime.
 
@@ -247,7 +247,7 @@ Inject via `ConfigurationManager` so components reference `config.schema.columns
 
 ---
 
-### 2.9 ~~HIGH: Missing Day-One Artifacts (Rule 2.10)~~ ✅ ADDRESSED (v1.1)
+### 2.9 ~~HIGH: Missing Day-One Artifacts~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** All five mandatory onboarding artifacts are now present:
 >
@@ -554,7 +554,7 @@ No `src/py.typed` file existed. This marker signals PEP 561 compliance to downst
 
 ---
 
-### 3.3 Add Great Expectations (GX) Data Validation (Rule 2.1)
+### 3.3 Add Great Expectations (GX) Data Validation
 
 The current `DataValidation` component only drops nulls, filters by description length, cleans text artifacts, and deduplicates. Production-grade validation should also enforce:
 - Value ranges (e.g., `average_rating` between 0 and 5)
@@ -586,12 +586,11 @@ Replace `print()` debugging with structured traces to get span-level visibility 
 
 ---
 
-### 3.7 Add an Agentic Layer
+### 3.7 ~~Add an Agentic Layer~~ ✅ ADDRESSED (v1.3)
 
-Currently the system is a traditional ML pipeline with a search UI. To align with the **Agentic Data Scientist** philosophy (Rule 1.1), consider adding:
-- A LangChain/LangGraph ReAct agent that can reason about user preferences
-- Tool-calling to the recommender API (wrapping `HybridRecommender.recommend()` as a Tool)
-- Structured output enforcement via Pydantic for agent responses
+> **UPDATE (v1.3):** The Agentic Layer has been fully integrated using the **`pydantic-ai`** framework and **Google Gemini (`gemini-flash-latest`)**. The system now features a conversational "AI Book Assistant" that complements the traditional semantic search.
+> - **Structured Output Enforcement:** Uses Pydantic models to ensure the agent returns deterministic JSON schemas, eliminating hallucinations in UI rendering.
+> - **Tool Integration:** The `HybridRecommender` is exposed as a tool, allowing the agent to combine conversational context with exact high-dimensional vector search.
 
 ---
 
@@ -625,7 +624,7 @@ RUN uv sync --frozen  # All deps including dev
 | **Configuration Mgmt** | 6/10 | 8/10 | 10/10 | **10/10** | Config-driven agent model selection. |
 | **TOTAL** | **7.0 / 10** | **8.5 / 10** | **9.5 / 10** | **9.5 / 10** | **AGENTIC PRODUCTION-READY** |
 
-**Overall: ~~9.5/10~~ → 9.5/10** — The addition of the Agentic layer elevates the project from a semantic search engine to a true "Agentic Data Science" application. The transition was achieved without degrading original system stability, adhering to Rule 1.8 (Brain vs. Brawn).
+**Overall: ~~9.5/10~~ → 9.5/10** — The addition of the Agentic layer elevates the project from a semantic search engine to a true "Agentic Data Science" application. The transition was achieved without degrading original system stability, adhering to Brain vs. Brawn principle.
 
 
 ---
@@ -637,40 +636,40 @@ RUN uv sync --frozen  # All deps including dev
 
 ### Phase 1: Critical Security & CI Fixes ✅ COMPLETE
 
-- [x] **Rotate the exposed Google API key** ([§2.1](#21-critical-api-key-committed-to-repository-history))
-- [x] **Create `.env.example`** ([§2.2](#22-critical-missing-envexample-file-rule-210))
-- [x] **Fix CI test path `src/tests` → `tests/`** ([§2.6](#26-critical-ci-tests-run-against-wrong-path))
-- [x] **Create `src/py.typed`** ([§2.27](#227-low-no-pytyped-marker-pep-561))
+- [x] **Rotate the exposed Google API key** ([§2.1](#21-critical-api-key-committed-to-repository-history-addressed-v11))
+- [x] **Create `.env.example`** ([§2.2](#22-critical-missing-envexample-file-addressed-v11))
+- [x] **Fix CI test path `src/tests` → `tests/`** ([§2.6](#26-critical-ci-tests-run-against-wrong-path-addressed-v11))
+- [x] **Create `src/py.typed`** ([§2.27](#227-low-no-pytyped-marker-pep-561-addressed-v11))
 - [x] **Fix Python version mismatch in Dockerfile (`3.12` → `3.11`)** ([§2.7](#27-high-python-version-mismatch-between-environments))
 
 ### Phase 2: Type Safety & Linting Infrastructure ✅ COMPLETE
 
-- [x] **Remove `black` and `isort` from dependencies** ([§2.4](#24-critical-no-ruff-configuration-in-pyprojecttoml-rule-28))
-- [x] **Add `ruff`, `pyright`, `pytest-cov` as dev dependencies** ([§2.3](#23-critical-no-pyright-configuration-or-ci-enforcement-rule-28))
-- [x] **Add `[tool.ruff]` and `[tool.pyright]` to `pyproject.toml`** ([§2.3](#23-critical-no-pyright-configuration-or-ci-enforcement-rule-28))
-- [x] **Move dev-only packages to `[project.optional-dependencies] dev`** ([§2.17](#217-medium-dev-tools-ipykernel-notebook-pytest-in-production-dependencies))
-- [x] **Replace all legacy `typing` imports with PEP 604 builtins** ([§2.15](#215-medium-legacy-typing-imports-throughout-codebase))
-- [x] **Add type annotations to `ConfigurationManager.__init__`** ([§2.11](#211-high-configurationmanagerinit-parameters-lack-type-annotations))
-- [x] **Add generic type parameters to bare `dict` in `ModelEvaluationConfig`** ([§2.5](#25-critical-bare-dict-field-in-pydantic-config-entity-rule-23))
-- [x] **Add `ruff format`, `ruff check`, `pyright`, and coverage gate steps to CI** ([§2.13](#213-high-no-ruffpyright-steps-in-ci--only-tests--docker))
-- [x] **Remove `ensure_annotations` dependency** ([§2.18](#218-medium-ensure_annotations-dependency--redundant-with-pyright))
+- [x] **Remove `black` and `isort` from dependencies** ([§2.4](#24-critical-no-ruff-configuration-in-pyprojecttoml-addressed-v11))
+- [x] **Add `ruff`, `pyright`, `pytest-cov` as dev dependencies** ([§2.3](#23-critical-no-pyright-configuration-or-ci-enforcement-addressed-v11))
+- [x] **Add `[tool.ruff]` and `[tool.pyright]` to `pyproject.toml`** ([§2.3](#23-critical-no-pyright-configuration-or-ci-enforcement-addressed-v11))
+- [x] **Move dev-only packages to `[project.optional-dependencies] dev`** ([§2.17](#217-medium-dev-tools-ipykernel-notebook-pytest-in-production-dependencies-addressed-v11))
+- [x] **Replace all legacy `typing` imports with PEP 604 builtins** ([§2.15](#215-medium-legacy-typing-imports-throughout-codebase-addressed-v11))
+- [x] **Add type annotations to `ConfigurationManager.__init__`** ([§2.11](#211-high-configurationmanagerinit-parameters-lack-type-annotations-addressed-v11))
+- [x] **Add generic type parameters to bare `dict` in `ModelEvaluationConfig`** ([§2.5](#25-critical-bare-dict-field-in-config-entity-addressed-v11))
+- [x] **Add `ruff format`, `ruff check`, `pyright`, and coverage gate steps to CI** ([§2.13](#213-high-no-ruffpyright-steps-in-ci-only-tests--docker-addressed-v11))
+- [x] **Remove `ensure_annotations` dependency** ([§2.18](#218-medium-ensure_annotations-dependency-redundant-with-pyright-addressed-v11))
 
 ### Phase 3: Architecture Hardening ✅ COMPLETE
 
-- [x] **Refactor `app.py` monolith into `src/app/` modular package** ([§2.10](#210-high-appy-monolith-with-hardcoded-constants))
-- [x] **Move hardcoded `CATEGORIES` and `TONE_MAP` to `params.yaml`** ([§2.20](#220-medium-hardcoded-magic-numbers))
-- [x] **Replace `print()` calls with `logger.info()`** ([§2.21](#221-medium-print-debugging-statements-in-production-code))
-- [x] **Add `integration` test markers — separate fast vs. slow tests** ([§2.23](#223-medium-tests-depend-on-artifact-files--not-truly-unit-tests))
-- [x] **Add `Makefile`** ([§3.1](#31-add-a-makefile-for-developer-experience))
-- [x] **Add `.pre-commit-config.yaml`** ([§3.2](#32-add-pre-commit-hooks))
-- [x] **Create `config/schema.yaml` for data contracts** ([§2.8](#28-high-no-schemayaml--no-data-contracts-rule-21))
-- [x] **Create typed Pydantic models for YAML config** ([§2.14](#214-medium-read_yaml-returns-raw-configbox--no-pydantic-validation))
-- [x] **Move remaining magic numbers to `params.yaml`** ([§2.20](#220-medium-hardcoded-magic-numbers))
+- [x] **Refactor `app.py` monolith into `src/app/` modular package** ([§2.10](#210-high-appy-monolith-with-hardcoded-constants-addressed-v11))
+- [x] **Move hardcoded `CATEGORIES` and `TONE_MAP` to `params.yaml`** ([§2.20](#220-medium-hardcoded-magic-numbers-addressed-v12))
+- [x] **Replace `print()` calls with `logger.info()`** ([§2.21](#221-medium-print-debugging-statements-in-production-code-addressed-v11))
+- [x] **Add `integration` test markers — separate fast vs. slow tests** ([§2.23](#223-medium-tests-depend-on-artifact-files-not-truly-unit-tests-addressed-v11))
+- [x] **Add `Makefile`** ([§3.1](#31-add-a-makefile-for-developer-experience-delivered-v11))
+- [x] **Add `.pre-commit-config.yaml`** ([§3.2](#32-add-pre-commit-hooks-delivered-v11))
+- [x] **Create `config/schema.yaml` for data contracts** ([§2.8](#28-high-no-schemayaml-no-data-contracts-addressed-v12))
+- [x] **Create typed Pydantic models for YAML config** ([§2.14](#214-medium-read_yaml-returns-raw-configbox-no-pydantic-validation-addressed-v12))
+- [x] **Move remaining magic numbers to `params.yaml`** ([§2.20](#220-medium-hardcoded-magic-numbers-addressed-v12))
 
-### Phase 4: Portfolio Differentiation ✅ COMPLETE
+### Phase 4: Portfolio Differentiation ✅ WORKING
 
-- [x] **Add Great Expectations data validation** ([§3.3](#33-add-great-expectations-gx-data-validation-rule-21))
-- [x] **Add an Agentic Layer (LangGraph/pydantic-ai)** ([§3.7](#37-add-an-agentic-layer))
+- [ ] **Add Great Expectations data validation** ([§3.3](#33-add-great-expectations-gx-data-validation))
+- [x] **Add an Agentic Layer (LangGraph/pydantic-ai)** ([§3.7](#37-add-an-agentic-layer-addressed-v13))
 - [ ] **Add structured JSON logging** ([§3.4](#34-add-structured-json-logging-for-production))
 - [ ] **Add `CONTRIBUTING.md` and Model Card** ([§3.5](#35-add-contributingmd-and-model-card))
 - [ ] **Add OpenTelemetry / LangSmith tracing** ([§3.6](#36-add-opentelemetry-or-langsmith-tracing))

@@ -8,37 +8,82 @@
 
 The Agentic Layer transforms the Hybrid Book Recommender from a **static search tool** into a **conversational AI system**. It introduces a `pydantic-ai` ReAct agent that reasons about user preferences in natural language, orchestrates the deterministic `HybridRecommender` engine as a tool, and returns fully validated, structured responses to the Gradio chat UI.
 
-This layer directly fulfills the **Agentic Data Scientist** mandate (Rule 1.1): the Agent is the Brain, the `HybridRecommender` is the Brawn. The LLM never hallucinates book data — it exclusively reasons about *which tool calls to make* and *how to present validated results conversationally*.
+This layer directly fulfills the **Agentic Data Scientist** approach: the Agent is the Brain, the `HybridRecommender` is the Brawn. The LLM never hallucinates book data — it exclusively reasons about *which tool calls to make* and *how to present validated results conversationally*.
 
 ---
 
-## 2. Design Principles Applied
+## 2. Why the Agentic Layer Enhances the System
+
+### 2.1 The Limitation of the Static Search UI
+
+Before v1.3, the system was a powerful but **rigid** tool: the user had to know exactly what dropdowns to select — genre, tone, a keyword query string. This works well for expert users, but creates three concrete friction points:
+
+| Pain Point | Impact |
+|:---|:---|
+| **Vocabulary mismatch** | A user thinking *"something cozy and autumnal"* doesn't map to `category=Fiction, tone=Suspenseful`. |
+| **No multi-turn refinement** | Every search was stateless — no way to say *"a bit lighter"* as a follow-up. |
+| **No contextual synthesis** | The UI returned a list; the user had to interpret whether each result actually matched their intent. |
+
+### 2.2 What the Agent Adds
+
+The Agentic Layer resolves all three friction points without replacing the semantic engine — it *wraps* it with reasoning:
+
+| Enhancement | How It Works | Concrete Benefit |
+|:---|:---|:---|
+| **Intent Disambiguation** | The LLM translates *"something cozy for a rainy day"* into `query="cozy atmospheric", tone="Happy"` before calling `search_books` | Users don't need to learn the system's vocabulary |
+| **Multi-Turn Refinement** | Follow-up messages like *"something darker"* adjust the `tone` filter in the next tool call | Conversational UX, not form-reset UX |
+| **Guardrailed Creativity** | `AgentResponse(BaseModel)` with `extra="forbid"` ensures all titles, authors, and ratings come from the `HybridRecommender`, not LLM imagination | Zero hallucination risk on factual book data |
+| **Contextual Synthesis** | The agent explains *why* each book matches the user's stated mood — not just a list | Higher perceived value; users understand the recommendation |
+| **Follow-Up Suggestions** | Agent generates 3 refinement prompts (e.g., *"Try psychological thrillers?"*) | Drives discovery and longer sessions |
+
+### 2.3 The Brain vs. Brawn Guarantee
+
+The critical design decision is **what the agent is never allowed to do**:
+
+```
+❌ LLM generates book titles, authors, or ratings   → Hallucination risk
+✅ LLM decides which tool to call and how to present results → Safe reasoning
+```
+
+The `HybridRecommender` remains the sole source of truth for book data. The agent is a **semantic router and synthesis layer** — it adds conversational value on top of a deterministic engine, not instead of it. This is the **Brain vs. Brawn** principle in practice.
+
+### 2.4 Portfolio Differentiation
+
+From an MLOps maturity perspective, this transition demonstrates:
+
+- **Agentic Data Scientist mindset:** Shifting from manually coding search logic to orchestrating an agent that reasons autonomously.
+- **FTI Pipeline Integrity:** The Training Pipeline (ChromaDB build) and Inference Pipeline (`HybridRecommender`) remain unchanged — the Agent is a new *client* of the Inference Pipeline, not a replacement for it.
+- **Production-grade AI Safety:** Structured output enforcement via Pydantic is the same pattern used in enterprise AI systems to prevent prompt injection and hallucination from reaching end users.
+
+---
+
+## 3. Design Principles Applied
 
 | Rule | Application |
 |---|---|
-| **Rule 1.2 — Brain vs. Brawn** | Agent reasons; `HybridRecommender` executes. LLM never performs math or data lookup. |
-| **Rule 1.4 — Structured Output** | All agent responses returned as validated `AgentResponse(BaseModel)` — never free text. |
-| **Rule 1.5 — No Naked Prompts** | System prompt versioned in `src/agent/prompts.py` as `BOOK_RECOMMENDER_SYSTEM_PROMPT v1.0.0`. |
-| **Rule 1.7 — Better Prompting** | Every tool carries a rich docstring the LLM reads at runtime to understand capabilities. |
-| **Rule 1.8 — Agent as a Tool Pattern** | Primary agent retains full state control; sub-tools are stateless, deterministic functions. |
-| **Rule 1.10 — Cost Optimization** | Uses `gemini-2.0-flash` (fast, cost-efficient) for routing and reasoning. |
+| **Brain vs. Brawn** | Agent reasons; `HybridRecommender` executes. LLM never performs math or data lookup. |
+| **Structured Output** | All agent responses returned as validated `AgentResponse(BaseModel)` — never free text. |
+| **No Naked Prompts** | System prompt versioned in `src/agent/prompts.py` as `BOOK_RECOMMENDER_SYSTEM_PROMPT v1.0.0`. |
+| **Better Prompting** | Every tool carries a rich docstring the LLM reads at runtime to understand capabilities. |
+| **Agent as a Tool Pattern** | Primary agent retains full state control; sub-tools are stateless, deterministic functions. |
+| **Cost Optimization** | Uses `gemini-2.0-flash` (fast, cost-efficient) for routing and reasoning. |
 
 ---
 
-## 3. File Structure
+## 4. File Structure
 
 ```
 src/agent/
 ├── __init__.py          # Package marker
-├── schemas.py           # Pydantic structured output models (Rule 1.4)
-├── prompts.py           # Versioned system prompt constants (Rule 1.5)
+├── schemas.py           # Pydantic structured output models
+├── prompts.py           # Versioned system prompt constants
 ├── tools.py             # Deterministic tool functions + AgentDependencies dataclass
 └── agent.py             # Agent definition, chat() function, dependency factory
 ```
 
 ---
 
-## 4. Architecture Diagram
+## 5. Architecture Diagram
 
 ```mermaid
 graph TD
@@ -73,9 +118,9 @@ graph TD
 
 ---
 
-## 5. Key Components
+## 6. Key Components
 
-### 5.1 `AgentDependencies` — Dependency Injection Container
+### 6.1 `AgentDependencies` — Dependency Injection Container
 
 ```python
 @dataclass
@@ -89,7 +134,7 @@ class AgentDependencies:
 
 Dependencies are created **once at first request** via `create_agent_dependencies()` (lazy singleton), then injected into every agent run via `pydantic-ai`'s `RunContext` pattern. This avoids costly re-initialization of the `HybridRecommender` (ChromaDB connection + CSV load) on every chat message.
 
-### 5.2 Structured Output Schemas
+### 6.2 Structured Output Schemas
 
 All agent outputs are validated by Pydantic before reaching the UI. `extra="forbid"` is mandatory on all models:
 
@@ -110,7 +155,7 @@ class AgentResponse(BaseModel):
     follow_up_suggestions: list[str]
 ```
 
-### 5.3 Versioned System Prompt (v1.0.0)
+### 6.3 Versioned System Prompt (v1.0.0)
 
 The system prompt in `src/agent/prompts.py` is a versioned constant. It constrains the agent to:
 
@@ -121,7 +166,7 @@ The system prompt in `src/agent/prompts.py` is a versioned constant. It constrai
 
 Prompt version is tracked by `PROMPT_VERSION = "1.0.0"` — increment this whenever prompt logic changes.
 
-### 5.4 Tools (The Brawn)
+### 6.4 Tools (The Brawn)
 
 | Tool | Inputs | Output | Purpose |
 |---|---|---|---|
@@ -131,22 +176,22 @@ Prompt version is tracked by `PROMPT_VERSION = "1.0.0"` — increment this whene
 
 Tools are **stateless and deterministic** — the same input always produces the same output, making them testable without LLM involvement.
 
-### 5.5 Agent Model Configuration
+### 6.5 Agent Model Configuration
 
 ```yaml
 # config/params.yaml
 agent:
-  model_name: gemini-2.0-flash   # Cost-efficient reasoning model (Rule 1.10)
+  model_name: gemini-2.0-flash   # Cost-efficient reasoning model
   temperature: 0.7               # Balanced creativity/determinism
   max_results_per_search: 5      # Capped to avoid UI overload
 ```
 
 > [!NOTE]
-> `model_name` and `temperature` are in `params.yaml` but not yet wired into the `GoogleModel` constructor — the agent currently uses the default provider temperature. This is a planned improvement for v1.4 (see §8).
+> `model_name` and `temperature` are in `params.yaml` but not yet wired into the `GoogleModel` constructor — the agent currently uses the default provider temperature. This is a planned improvement for v1.4 (see §9).
 
 ---
 
-## 6. Request Lifecycle
+## 7. Request Lifecycle
 
 ```
 User types: "I want a dark thriller set in a small town"
@@ -198,7 +243,7 @@ gr.Chatbot UI rendered
 
 ---
 
-## 7. Error Handling & Resilience
+## 8. Error Handling & Resilience
 
 The agent layer has two defensive fallback mechanisms:
 
@@ -208,20 +253,20 @@ The agent layer has two defensive fallback mechanisms:
 
 ---
 
-## 8. Future Improvements (v1.4+)
+## 9. Future Improvements (v1.4+)
 
 | Item | Priority | Description |
 |---|---|---|
 | **Wire temperature to AgentConfig** | Medium | Pass `temperature` from `AgentConfig` to `GoogleModel` provider settings |
 | **Conversation history** | High | Pass `message_history` to `run_sync()` for multi-turn coherence |
 | **Streaming responses** | Medium | Use `run_stream_sync()` for progressive token display in `gr.Chatbot` |
-| **AgentOps tracing** | Medium | Log tool call counts, latency, and retry rates (Rule 2.7) |
+| **AgentOps tracing** | Medium | Log tool call counts, latency, and retry rates |
 | **LLM-as-a-Judge evals** | Low | Automated evaluation of recommendation quality via a judge agent |
-| **HITL for sensitive queries** | Low | Add human-in-the-loop approval for edge cases (Rule 1.6) |
+| **HITL for sensitive queries** | Low | Add human-in-the-loop approval for edge cases |
 
 ---
 
-## 9. Test Coverage
+## 10. Test Coverage
 
 ```
 tests/unit/test_agent.py — 7 tests (all passing)

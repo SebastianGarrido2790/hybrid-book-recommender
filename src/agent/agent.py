@@ -3,10 +3,10 @@ Core Agent definition for the Book Recommender.
 
 This module wires together the LLM model, system prompt, tools, and structured output
 into a single pydantic-ai Agent instance. It follows the 'Agent as Tool' pattern
-(Rule 1.8) where the agent retains full control over state and uses tools as
+where the agent retains full control over state and uses tools as
 stateless functions.
 
-The agent uses Google Gemini Flash for cost-efficient reasoning (Rule 1.10).
+The agent uses Google Gemini Flash for cost-efficient reasoning.
 """
 
 import sys
@@ -92,7 +92,7 @@ def chat(user_message: str, deps: AgentDependencies) -> AgentResponse:
         CustomException: If the agent fails to produce a valid response.
     """
     try:
-        # Pass the model from deps to override the default (Rule 2.8)
+        # Pass the model from deps to override the default
         result = book_agent.run_sync(user_message, deps=deps, model=deps.model_name)
         return result.output
     except Exception as e:

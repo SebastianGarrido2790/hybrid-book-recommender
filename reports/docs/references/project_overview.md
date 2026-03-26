@@ -214,7 +214,7 @@ By end of project:
 |---|---|
 | `uv` over `pip`/`poetry` | Deterministic lockfile, 10-100× faster resolution, aligns with Astral toolchain (`ruff`) |
 | `pydantic-ai` over LangChain ReAct | Lighter abstraction, native Pydantic output validation, no graph overhead for single-agent use case |
-| `gemini-2.0-flash` for agent | Cost-efficient for routing/reasoning (Rule 1.10); Gemini Pro reserved for future complex reasoning |
+| `gemini-2.0-flash` for agent | Cost-efficient for routing/reasoning; Gemini Pro reserved for future complex reasoning |
 | HuggingFace for embeddings | Privacy-safe, no API key required for inference, deterministic outputs |
 | Gradio over Streamlit | Native `gr.Chatbot` component for agentic tab; better ML model showcase alignment |
 | `ConfigDict(extra="forbid")` everywhere | Fail-fast at startup, not at runtime — prevents silent config drift |

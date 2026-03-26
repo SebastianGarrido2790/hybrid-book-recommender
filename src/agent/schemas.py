@@ -1,7 +1,7 @@
 """
 Structured output models for the Book Recommender Agent.
 
-These Pydantic models enforce structured output (Rule 1.4), ensuring the agent
+These Pydantic models enforce structured output, ensuring the agent
 communicates with the UI layer via validated JSON — never free text.
 All models enforce `extra="forbid"` per project convention.
 """

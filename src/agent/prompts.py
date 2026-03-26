@@ -1,7 +1,7 @@
 """
 Versioned system prompts for the Book Recommender Agent.
 
-All prompts are stored here as constants — never hardcoded inline (Rule 1.5).
+All prompts are stored here as constants — never hardcoded inline.
 The agent imports these at registration time, making prompts versionable,
 testable, and auditable independently of the logic.
 """

@@ -30,3 +30,26 @@ def get_book_details_html(book: dict) -> str:
         </div>
     </div>
     """
+
+
+def get_chat_book_card_html(book: object) -> str:
+    """Returns a compact markdown card for a book recommendation in the chat.
+
+    Args:
+        book: A BookRecommendation object with title, authors, rating, mood_score,
+              category, and description attributes.
+
+    Returns:
+        str: Markdown-formatted string for the chatbot.
+    """
+    title = getattr(book, "title", "Unknown")
+    authors = getattr(book, "authors", "Unknown")
+    rating = getattr(book, "rating", "N/A")
+    mood = getattr(book, "mood_score", "N/A")
+    category = getattr(book, "category", "N/A")
+    desc = getattr(book, "description", "No description available.")
+    truncated = (desc[:200] + "...") if len(desc) > 200 else desc
+
+    return (
+        f"\n**📖 {title}** by *{authors}*\n⭐ {rating} · 🎭 {mood} · 📂 {category}\n> {truncated}\n"
+    )

@@ -164,3 +164,15 @@ class ModelEvaluationConfig(BaseModel):
     all_params: dict[str, Any]
     mlflow_uri: str
     experiment_name: str
+
+
+class AgentConfig(BaseModel):
+    """
+    Configuration for the Agentic Layer (pydantic-ai).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    model_name: str
+    temperature: float
+    max_results_per_search: int

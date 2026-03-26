@@ -18,6 +18,7 @@ from box import ConfigBox
 
 from src.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH, PROJECT_ROOT, SCHEMA_FILE_PATH
 from src.entity.config_entity import (
+    AgentConfig,
     BatchPredictionConfig,
     DataEnrichmentConfig,
     DataIngestionConfig,
@@ -331,5 +332,22 @@ class ConfigurationManager:
             )
 
             return model_evaluation_config
+        except Exception as e:
+            raise CustomException(e, sys)
+
+    def get_agent_config(self) -> AgentConfig:
+        """Creates the Agent configuration entity.
+
+        Returns:
+            AgentConfig: Configuration object for the agentic layer.
+        """
+        try:
+            params = self.params.agent
+
+            return AgentConfig(
+                model_name=str(params.model_name),
+                temperature=float(params.temperature),
+                max_results_per_search=int(params.max_results_per_search),
+            )
         except Exception as e:
             raise CustomException(e, sys)

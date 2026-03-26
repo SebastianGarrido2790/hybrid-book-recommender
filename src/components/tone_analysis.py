@@ -12,7 +12,7 @@ import torch
 from tqdm import tqdm
 from transformers import pipeline
 
-from src.entity.config_entity import ToneAnalysisConfig
+from src.entity.config_entity import SchemaConfig, ToneAnalysisConfig
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
@@ -28,8 +28,9 @@ class ToneAnalysis:
     aggregating these scores to determine the dominant tone of the book.
     """
 
-    def __init__(self, config: ToneAnalysisConfig):
+    def __init__(self, config: ToneAnalysisConfig, schema: SchemaConfig):
         self.config = config
+        self.schema = schema
 
     def _split_into_sentences(self, text: str) -> list[str]:
         """
@@ -39,7 +40,8 @@ class ToneAnalysis:
             return []
         # Regex to split on . ! ? followed by space and capital letter or end of string
         sentences = re.split(r"(?<=[.!?])\s+", text)
-        return [s.strip() for s in sentences if len(s.strip()) > 5]
+        sentences = [s.strip() for s in sentences if len(s.strip()) > self.config.min_sentence_len]
+        return sentences
 
     def initiate_tone_analysis(self) -> None:
         """
@@ -60,6 +62,9 @@ class ToneAnalysis:
         try:
             logger.info(f"Loading data from {self.config.data_path}")
             df = pd.read_csv(self.config.data_path)
+
+            cols = self.schema.columns
+            enriched_cols = self.schema.enriched_columns
 
             logger.info(f"Initializing Emotion Classifier: {self.config.model_name}")
 
@@ -86,7 +91,7 @@ class ToneAnalysis:
             for _idx, row in tqdm(
                 df.iterrows(), total=len(df), desc="Analyzing Books (Sentence-Level)"
             ):
-                description = str(row.get("description", ""))
+                description = str(row.get(cols["description"], ""))
                 sentences = self._split_into_sentences(description)
 
                 if not sentences:
@@ -95,11 +100,12 @@ class ToneAnalysis:
                     continue
 
                 try:
-                    sentences = sentences[:20]
+                    # Truncate to configured max sentences
+                    sentences = sentences[: self.config.max_sentences_per_book]
                     results = classifier(sentences)
                 except Exception as e:
                     logger.warning(
-                        f"Error classifying sentences for book '{row.get('title')}': {e}. Falling back to neutral."
+                        f"Error classifying sentences for book '{row.get(cols['title'])}': {e}. Falling back to neutral."
                     )
                     book_dominant_tones.append("neutral")
                     emotion_scores_list.append(dict.fromkeys(self.config.target_emotions, 0.0))
@@ -129,13 +135,13 @@ class ToneAnalysis:
                 top_non_neutral = max(non_neutral_averages, key=lambda k: non_neutral_averages[k])
                 top_non_neutral_score = non_neutral_averages[top_non_neutral]
 
-                if top_non_neutral_score > 0.15:
+                if top_non_neutral_score > self.config.detection_threshold:
                     book_dominant_tones.append(top_non_neutral)
                 else:
                     book_dominant_tones.append("neutral")
 
-            # Add columns to dataframe
-            df["dominant_tone"] = book_dominant_tones
+            # Add columns to dataframe using schema mapping
+            df[enriched_cols["dominant_tone"]] = book_dominant_tones
             scores_df = pd.DataFrame(emotion_scores_list)
             for col in scores_df.columns:
                 df[col] = scores_df[col]

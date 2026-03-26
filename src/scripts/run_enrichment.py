@@ -37,8 +37,9 @@ def main() -> None:
 
         config_manager = ConfigurationManager()
         enrichment_config = config_manager.get_data_enrichment_config()
+        schema_config = config_manager.get_schema_config()
 
-        enricher = DataEnrichment(config=enrichment_config)
+        enricher = DataEnrichment(config=enrichment_config, schema=schema_config)
         enricher.initiate_data_enrichment()
 
         logger.info("✅ Enrichment Process Completed Successfully ✅")

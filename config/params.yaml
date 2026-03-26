@@ -24,6 +24,7 @@ inference:
   top_k: 50
   popularity_weight: 0.2
   search_buffer_multiplier: 5  # Multiplier for initial vector search fetch to allow for post-filtering
+  filtered_search_boost: 10 # Additional boost for filtered queries to ensure enough candidates
 
 data_enrichment:
   model_name: facebook/bart-large-mnli
@@ -34,6 +35,9 @@ tone_analysis:
   model_name: j-hartmann/emotion-english-distilroberta-base
   batch_size: 32
   target_emotions: ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
+  min_sentence_len: 5 # Skip sentences with fewer than 5 characters
+  max_sentences_per_book: 20 # Only analyze first 20 sentences for performance
+  detection_threshold: 0.15 # Score above this required to set a dominant tone
 
 mlflow:
   uri: https://dagshub.com/SebastianGarrido2790/hybrid-book-recommender.mlflow  # Replace with your own MLflow tracking URI

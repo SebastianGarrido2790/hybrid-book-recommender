@@ -5,7 +5,7 @@ and saves the results to a file, satisfying the 'heavy lifting' requirement.
 
 import sys
 
-from src.entity.config_entity import BatchPredictionConfig, InferenceConfig
+from src.entity.config_entity import BatchPredictionConfig, InferenceConfig, SchemaConfig
 from src.models.hybrid_recommender import HybridRecommender
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
@@ -22,6 +22,7 @@ class BatchPrediction:
         self,
         batch_config: BatchPredictionConfig,
         inference_config: InferenceConfig,
+        schema: SchemaConfig,
     ):
         """
         Initializes the BatchPrediction component.
@@ -29,10 +30,11 @@ class BatchPrediction:
         Args:
             batch_config (BatchPredictionConfig): Configuration for batch output.
             inference_config (InferenceConfig): Configuration for the recommender model.
+            schema (SchemaConfig): Data contract mapping logical -> physical column names.
         """
         try:
             self.batch_config = batch_config
-            self.recommender = HybridRecommender(config=inference_config)
+            self.recommender = HybridRecommender(config=inference_config, schema=schema)
         except Exception as e:
             raise CustomException(e, sys)
 

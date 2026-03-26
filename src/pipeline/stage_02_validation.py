@@ -39,11 +39,13 @@ class DataValidationTrainingPipeline:
         """
         try:
             logger.info("🚀 Starting Validation Pipeline 🚀")
-
+            # 1. Load Config
             config = ConfigurationManager()
             data_validation_config = config.get_data_validation_config()
+            schema_config = config.get_schema_config()
 
-            data_validation = DataValidation(config=data_validation_config)
+            # 2. Init Component
+            data_validation = DataValidation(config=data_validation_config, schema=schema_config)
             data_validation.validate_and_clean_data()
 
             logger.info("✅ Validation Pipeline Completed ✅")

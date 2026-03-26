@@ -18,7 +18,7 @@ data_validation:
 
 data_transformation:
   root_dir: artifacts/data_transformation
-  data_path: artifacts/data_validation/clean_books.csv
+  data_path: artifacts/tone_analysis/toned_books.csv
 
 data_enrichment:
   root_dir: artifacts/data_enrichment

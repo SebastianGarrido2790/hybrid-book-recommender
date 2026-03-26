@@ -8,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 
-from src.entity.config_entity import DataValidationConfig
+from src.entity.config_entity import DataValidationConfig, SchemaConfig
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
@@ -22,8 +22,9 @@ class DataValidation:
     deduplicating entries, and enforcing schema checks.
     """
 
-    def __init__(self, config: DataValidationConfig):
+    def __init__(self, config: DataValidationConfig, schema: SchemaConfig):
         self.config = config
+        self.schema = schema
 
     def validate_and_clean_data(self) -> bool:
         """
@@ -44,27 +45,32 @@ class DataValidation:
             df: Any = pd.read_csv(self.config.unzip_data_dir)
             initial_shape = df.shape
 
+            cols = self.schema.columns
             # 1. Drop missing critical fields
-            df = df.dropna(subset=["description", "title"])
+            df = df.dropna(subset=[cols["description"], cols["title"]])
 
             # 2. Filter by description length
-            if "description" in df.columns:
-                desc_series: Any = df["description"]
+            if cols["description"] in df.columns:
+                desc_series: Any = df[cols["description"]]
                 df = df[desc_series.str.len() > self.config.min_desc_len]
 
             # 3. Clean Text Artifacts (Categories/Authors)
             # Removes brackets ['Fiction'] -> Fiction
-            if "categories" in df.columns:
-                cat_series: Any = df["categories"]
-                df["categories"] = cat_series.astype(str).str.replace(r"[\[\]']", "", regex=True)
+            if cols["categories"] in df.columns:
+                cat_series: Any = df[cols["categories"]]
+                df[cols["categories"]] = cat_series.astype(str).str.replace(
+                    r"[\[\]']", "", regex=True
+                )
                 df = df[cat_series.str.len() > self.config.categories_min_len]
 
-            if "authors" in df.columns:
-                auth_series: Any = df["authors"]
-                df["authors"] = auth_series.astype(str).str.replace(r"[\[\]']", "", regex=True)
+            if cols["authors"] in df.columns:
+                auth_series: Any = df[cols["authors"]]
+                df[cols["authors"]] = auth_series.astype(str).str.replace(
+                    r"[\[\]']", "", regex=True
+                )
 
             # 4. Deduplicate
-            df = df.drop_duplicates(subset=["isbn13"])
+            df = df.drop_duplicates(subset=[cols["isbn"]])
 
             final_shape = df.shape
             dropped_rows = initial_shape[0] - final_shape[0]

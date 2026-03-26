@@ -9,7 +9,7 @@ import pandas as pd
 from langchain_chroma import Chroma
 
 from src.constants import PROJECT_ROOT
-from src.entity.config_entity import InferenceConfig
+from src.entity.config_entity import InferenceConfig, SchemaConfig
 from src.entity.recommendation_entity import RecommendationResult
 from src.models.llm_utils import EmbeddingFactory
 from src.utils.exception import CustomException
@@ -27,7 +27,7 @@ class HybridRecommender:
     2. Collaborative Filtering Proxy (Ratings): Boosts books with higher average ratings.
     """
 
-    def __init__(self, config: InferenceConfig):
+    def __init__(self, config: InferenceConfig, schema: SchemaConfig):
         """
         Initializes the HybridRecommender components, including the embedding function,
         vector store (ChromaDB), and book metadata.
@@ -35,12 +35,14 @@ class HybridRecommender:
         Args:
             config (InferenceConfig): The inference configuration entity containing
                 embedding provider details, database paths, and data source locations.
+            schema (SchemaConfig): Data contract mapping logical -> physical column names.
 
         Raises:
             CustomException: If any component fails to initialize or data cannot be loaded.
         """
         try:
             self.config = config
+            self.schema = schema
 
             self.embedding_fn = EmbeddingFactory.get_embedding_function(
                 provider=self.config.embedding_provider,
@@ -54,9 +56,11 @@ class HybridRecommender:
             )
 
             # We read 'clean_books.csv' specifically to get ALL ratings, not just the training set.
-            # This fixes the issue where a book might be in the vector DB but missing from a 'train.csv' split.
             self.books_metadata = pd.read_csv(self.config.data_path)
-            self.books_metadata.set_index("isbn13", inplace=True)
+
+            cols = self.schema.columns
+            # Ensure index is set correctly using schema mapping
+            self.books_metadata.set_index(cols["isbn"], inplace=True)
 
             logger.info(
                 f"Hybrid Recommender initialized. DB: {self.config.chroma_db_dir.relative_to(PROJECT_ROOT)}"
@@ -77,7 +81,7 @@ class HybridRecommender:
 
         Returns:
             List[RecommendationResult]: A list of RecommendationResult objects, each containing book metadata
-                                  and the calculated 'score'.
+                                   and the calculated 'score'.
         """
         top_k = self.config.top_k
         popularity_weight = self.config.popularity_weight
@@ -94,7 +98,9 @@ class HybridRecommender:
             # We use the configured search_buffer_multiplier.
             multiplier = self.config.search_buffer_multiplier
             if category_filter or tone_filter:
-                multiplier *= 10  # Additional boost for filtered queries
+                multiplier *= (
+                    self.config.filtered_search_boost
+                )  # Additional boost for filtered queries
 
             fetch_k = top_k * multiplier
             logger.info(f"Fetching {fetch_k} candidates from VectorDB for filtering...")
@@ -106,10 +112,13 @@ class HybridRecommender:
             raise CustomException(e, sys)
 
         recommendations = []
+        cols = self.schema.columns
+        enriched_cols = self.schema.enriched_columns
 
         for doc, score in results:
             try:
                 # --- ISBN CASTING ---
+                # logical key in vector DB metadata was 'isbn'
                 isbn_str = doc.metadata.get("isbn", "0")
                 isbn_clean = "".join(filter(str.isdigit, str(isbn_str)))
                 isbn = int(isbn_clean) if isbn_clean else 0
@@ -121,30 +130,33 @@ class HybridRecommender:
                         book_row = book_row.iloc[0]
 
                     # --- CATEGORICAL FILTERING ---
-                    category = book_row.get("simple_category")
-                    if category is None:
-                        category = book_row.get("categories", "Uncategorized")
+                    # We check for broad category first, then fallback to original
+                    category = book_row.get(enriched_cols["simple_category"])
+                    if category is None or pd.isna(category):
+                        category = book_row.get(cols["categories"], "Uncategorized")
 
-                    if category_filter and category_filter.lower() != str(category).lower():
+                    if category_filter and str(category_filter).lower() != str(category).lower():
                         continue
 
                     # --- TONE FILTERING ---
-                    tone = book_row.get("dominant_tone", "neutral")  # default to neutral if missing
+                    tone = book_row.get(
+                        enriched_cols["dominant_tone"], "neutral"
+                    )  # default to neutral if missing
 
-                    if tone_filter and tone_filter.lower() != str(tone).lower():
+                    if tone_filter and str(tone_filter).lower() != str(tone).lower():
                         continue
 
                     # --- TONE PROBABILITIES ---
-                    # If a tone filter is applied, we want to capture its specific probability for sorting.
+                    # If a tone filter is applied, we capture its specific probability for sorting.
                     tone_prob = 0.0
                     if tone_filter and tone_filter in book_row:
                         tone_prob = float(book_row.get(tone_filter, 0.0))
 
-                    rating_val = book_row.get("average_rating", 0.0)
+                    rating_val = book_row.get(cols["rating"], 0.0)
                     rating = 0.0 if pd.isna(rating_val) else float(rating_val)
 
-                    # Safely conversion for ratings_count (int(NaN) raises ValueError)
-                    raw_count = book_row.get("ratings_count", 0)
+                    # Safely conversion for ratings_count
+                    raw_count = book_row.get(cols["ratings_count"], 0)
                     try:
                         ratings_count = int(raw_count)
                     except (ValueError, TypeError):
@@ -152,6 +164,7 @@ class HybridRecommender:
 
                     # 2. Hybrid Scoring
                     similarity_score = 1 - score
+                    # rating / 5.0 as ratings are usually 0-5
                     hybrid_score = similarity_score + ((rating / 5.0) * popularity_weight)
 
                     recommendations.append(
@@ -160,12 +173,12 @@ class HybridRecommender:
                             title=doc.metadata.get("title", ""),
                             authors=doc.metadata.get("authors", ""),
                             description=doc.metadata.get("description", ""),
-                            category=category,
-                            tone=tone,
+                            category=str(category),
+                            tone=str(tone),
                             tone_prob=tone_prob,
                             rating=rating,
                             ratings_count=ratings_count,
-                            thumbnail=book_row.get("thumbnail"),
+                            thumbnail=book_row.get(cols["thumbnail"]),
                             score=hybrid_score,
                             match_reason="Hybrid Match",
                         )
@@ -175,8 +188,6 @@ class HybridRecommender:
                 continue
 
         # 3. Sort logic
-        # If a tone is selected, prioritized by probability as requested.
-        # Otherwise, use the standard hybrid score.
         if tone_filter:
             recommendations = sorted(recommendations, key=lambda x: x.tone_prob, reverse=True)
         else:

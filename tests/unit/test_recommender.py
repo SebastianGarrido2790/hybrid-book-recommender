@@ -29,10 +29,40 @@ import pandas as pd
 import pytest
 
 from src.constants import PROJECT_ROOT
-from src.entity.config_entity import InferenceConfig
+from src.entity.config_entity import InferenceConfig, SchemaConfig
 from src.models.hybrid_recommender import HybridRecommender
 
 # --- Fixtures ---
+
+
+@pytest.fixture
+def mock_schema() -> SchemaConfig:
+    """Provides a mock schema configuration object."""
+    return SchemaConfig(
+        columns={
+            "isbn": "isbn13",
+            "title": "title",
+            "authors": "authors",
+            "description": "description",
+            "categories": "categories",
+            "rating": "average_rating",
+            "ratings_count": "ratings_count",
+            "thumbnail": "thumbnail",
+        },
+        target_column={"name": "average_rating"},
+        enriched_columns={
+            "simple_category": "simple_category",
+            "dominant_tone": "dominant_tone",
+        },
+        types={
+            "isbn13": "int",
+            "title": "str",
+            "authors": "str",
+            "description": "str",
+            "categories": "str",
+            "average_rating": "float",
+        },
+    )
 
 
 @pytest.fixture
@@ -47,6 +77,7 @@ def mock_config() -> InferenceConfig:
         top_k=2,
         popularity_weight=0.5,
         search_buffer_multiplier=3,
+        filtered_search_boost=10,
     )
 
 
@@ -101,7 +132,9 @@ def mock_dependencies(
 # --- Tests ---
 
 
-def test_recommend_flow(mock_config: InferenceConfig, mock_dependencies: dict[str, Any]) -> None:
+def test_recommend_flow(
+    mock_config: InferenceConfig, mock_schema: SchemaConfig, mock_dependencies: dict[str, Any]
+) -> None:
     """Verifies that the recommend method returns correctly calculated hybrid scores."""
 
     # 1. Setup Mock Vector Search Results
@@ -132,7 +165,7 @@ def test_recommend_flow(mock_config: InferenceConfig, mock_dependencies: dict[st
     ]
 
     # 2. Initialize Recommender
-    recommender = HybridRecommender(mock_config)
+    recommender = HybridRecommender(mock_config, mock_schema)
 
     # 3. Execution
     recommendations = recommender.recommend("some query")
@@ -156,7 +189,7 @@ def test_recommend_flow(mock_config: InferenceConfig, mock_dependencies: dict[st
 
 
 def test_recommend_with_filter(
-    mock_config: InferenceConfig, mock_dependencies: dict[str, Any]
+    mock_config: InferenceConfig, mock_schema: SchemaConfig, mock_dependencies: dict[str, Any]
 ) -> None:
     """Verifies that category filtering correctly excludes mismatched items."""
 
@@ -180,7 +213,7 @@ def test_recommend_with_filter(
         (mock_doc2, 0.4),
     ]
 
-    recommender = HybridRecommender(mock_config)
+    recommender = HybridRecommender(mock_config, mock_schema)
 
     # Apply Filter: 'Non-Fiction'
     # Should exclude Book One (Fiction) but keep Book Two (Non-Fiction)

@@ -44,10 +44,13 @@ class PredictionPipeline:
             config_manager = ConfigurationManager()
             inference_config = config_manager.get_inference_config()
             batch_config = config_manager.get_batch_prediction_config()
+            schema_config = config_manager.get_schema_config()
 
             # 2. Init Component
             batch_predictor = BatchPrediction(
-                batch_config=batch_config, inference_config=inference_config
+                batch_config=batch_config,
+                inference_config=inference_config,
+                schema=schema_config,
             )
 
             # Test cases to verify different aspects (semantic vs hybrid)

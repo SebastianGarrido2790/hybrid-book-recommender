@@ -61,6 +61,9 @@ def test_enrichment_accuracy() -> None:
 
         logger.info("Loading enriched dataset...")
         df = pd.read_csv(data_path)
+        schema = config_manager.get_schema_config()
+        cols = schema.columns
+        enriched_cols = schema.enriched_columns
 
         # 1. Define Ground Truth Mapping
         # We map high-frequency original categories to our broad target facets.
@@ -82,10 +85,13 @@ def test_enrichment_accuracy() -> None:
 
         # 2. Filter for Labeled Data
         # We only keep rows where the original 'categories' is in our mapping keys.
-        df_test = df[df["categories"].isin(mapping.keys())].copy()
+        cat_col = cols["categories"]
+        simple_cat_col = enriched_cols["simple_category"]
+
+        df_test = df[df[cat_col].isin(mapping.keys())].copy()
 
         # Create Ground Truth column
-        df_test["ground_truth"] = df_test["categories"].map(mapping)
+        df_test["ground_truth"] = df_test[cat_col].map(mapping)
 
         # 3. Handle specific overlap cases
         # Note: Zero-shot might classify 'Literary Criticism' as 'Non-Fiction' (which is technically true),
@@ -96,7 +102,7 @@ def test_enrichment_accuracy() -> None:
 
         # 4. Generate Metrics
         y_true = df_test["ground_truth"]
-        y_pred = df_test["simple_category"]
+        y_pred = df_test[simple_cat_col]
 
         # Filter out prediction labels that aren't in our ground truth sub-analysis if needed
         # but here we want to see how the model performed overall.

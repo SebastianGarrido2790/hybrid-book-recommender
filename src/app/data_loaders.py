@@ -27,7 +27,8 @@ def init_recommender() -> HybridRecommender | None:
     try:
         config = ConfigurationManager()
         inference_config = config.get_inference_config()
-        recommender = HybridRecommender(config=inference_config)
+        schema_config = config.get_schema_config()
+        recommender = HybridRecommender(config=inference_config, schema=schema_config)
         return recommender
     except Exception as e:
         logger.error(f"Failed to initialize recommender: {CustomException(e, sys)}")

@@ -56,6 +56,9 @@ def test_broad_accuracy() -> None:
             return
 
         df = pd.read_csv(data_path)
+        schema = config_manager.get_schema_config()
+        cols = schema.columns
+        enriched_cols = schema.enriched_columns
 
         # 1. Map Ground Truth to Broad classes
         # Categories starting with 'Juvenile Fiction' or just 'Fiction'
@@ -72,11 +75,14 @@ def test_broad_accuracy() -> None:
                 return "Broad_Fiction"
             return "Broad_NonFiction"
 
-        # Filter for rows that have SOME category label
-        df = df.dropna(subset=["categories"])
+        # Filter for rows that have SOME category label - using schema mapping
+        cat_col = cols["categories"]
+        simple_cat_col = enriched_cols["simple_category"]
 
-        y_true = df["categories"].apply(get_broad_gt)
-        y_pred = df["simple_category"].apply(get_broad_pred)
+        df = df.dropna(subset=[cat_col])
+
+        y_true = df[cat_col].apply(get_broad_gt)
+        y_pred = df[simple_cat_col].apply(get_broad_pred)
 
         report = classification_report(y_true, y_pred)
 

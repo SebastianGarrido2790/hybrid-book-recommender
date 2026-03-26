@@ -44,9 +44,10 @@ class ModelTrainingPipeline:
             # 1. Load Config
             config = ConfigurationManager()
             model_trainer_config = config.get_model_trainer_config()
+            schema_config = config.get_schema_config()
 
             # 2. Init Component
-            model_trainer = ModelTrainer(config=model_trainer_config)
+            model_trainer = ModelTrainer(config=model_trainer_config, schema=schema_config)
 
             # 3. Run Logic
             model_trainer.initiate_model_training()

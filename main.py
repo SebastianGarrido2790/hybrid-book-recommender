@@ -6,71 +6,62 @@ Usage:
     uv run python main.py
 """
 
-# Initialize logger with headline BEFORE importing stages
-# This ensures "main.py" is the recorded headline for this process
 import sys
 
 from src.pipeline.stage_01_ingestion import DataIngestionTrainingPipeline
 from src.pipeline.stage_02_validation import DataValidationTrainingPipeline
-from src.pipeline.stage_03_transformation import DataTransformationTrainingPipeline
-from src.pipeline.stage_04_training import ModelTrainingPipeline
-from src.pipeline.stage_05_prediction import PredictionPipeline
-from src.pipeline.stage_06_evaluation import ModelEvaluationPipeline
+from src.pipeline.stage_03_enrichment import DataEnrichmentTrainingPipeline
+from src.pipeline.stage_04_tone_analysis import ToneAnalysisTrainingPipeline
+from src.pipeline.stage_05_transformation import DataTransformationTrainingPipeline
+from src.pipeline.stage_06_training import ModelTrainingPipeline
+from src.pipeline.stage_07_prediction import PredictionPipeline
+from src.pipeline.stage_08_evaluation import ModelEvaluationPipeline
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger, log_spacer
 
-# Initialize logger with headline AFTER all imports to satisfy E402
 logger = get_logger(headline="main.py")
 
 
-# 1. Data Ingestion
 try:
+    # 1. Data Ingestion
     data_ingestion = DataIngestionTrainingPipeline()
     data_ingestion.main()
-except Exception as e:
-    raise CustomException(e, sys)
+    log_spacer()
 
-log_spacer()
-
-# 2. Data Validation
-try:
+    # 2. Data Validation
     data_validation = DataValidationTrainingPipeline()
     data_validation.main()
-except Exception as e:
-    raise CustomException(e, sys)
+    log_spacer()
 
-log_spacer()
+    # 3. Data Enrichment
+    data_enrichment = DataEnrichmentTrainingPipeline()
+    data_enrichment.main()
+    log_spacer()
 
-# 3. Data Transformation
-try:
+    # 4. Tone Analysis
+    tone_analysis = ToneAnalysisTrainingPipeline()
+    tone_analysis.main()
+    log_spacer()
+
+    # 5. Data Transformation
     data_transformation = DataTransformationTrainingPipeline()
     data_transformation.main()
-except Exception as e:
-    raise CustomException(e, sys)
+    log_spacer()
 
-log_spacer()
-
-# 4. Model Training
-try:
+    # 6. Model Training
     model_trainer = ModelTrainingPipeline()
     model_trainer.main()
-except Exception as e:
-    raise CustomException(e, sys)
+    log_spacer()
 
-log_spacer()
-
-# 5. Prediction
-try:
+    # 7. Prediction
+    # This acts as a smoke test locally
     prediction = PredictionPipeline()
     prediction.main()
-except Exception as e:
-    raise CustomException(e, sys)
+    log_spacer()
 
-log_spacer()
-
-# 6. Model Evaluation
-try:
+    # 8. Model Evaluation
     model_evaluation = ModelEvaluationPipeline()
     model_evaluation.main()
+
 except Exception as e:
     raise CustomException(e, sys)

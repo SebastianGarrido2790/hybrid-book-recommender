@@ -15,7 +15,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from tqdm import tqdm
 
-from src.entity.config_entity import ModelTrainerConfig
+from src.entity.config_entity import ModelTrainerConfig, SchemaConfig
 from src.models.llm_utils import EmbeddingFactory
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
@@ -35,10 +35,12 @@ class ModelTrainer:
     Attributes:
         config (ModelTrainerConfig): Configuration entity containing data paths,
             model name, and batch size for the enrichment process.
+        schema (SchemaConfig): Data contract mapping logical -> physical column names.
     """
 
-    def __init__(self, config: ModelTrainerConfig):
+    def __init__(self, config: ModelTrainerConfig, schema: SchemaConfig):
         self.config = config
+        self.schema = schema
 
     def get_embedding_function(self) -> Any:
         """
@@ -77,12 +79,13 @@ class ModelTrainer:
 
             # Prepare Documents for LangChain
             documents = []
+            cols = self.schema.columns
             for _, row in tqdm(df.iterrows(), total=len(df), desc="Preparing Context Documents"):
-                # Safety checks for columns - using .get() for robustness
-                title = row.get("title", "Unknown Title")
-                authors = row.get("authors", "Unknown Author")
-                desc = row.get("description", "")
-                cats = row.get("categories", "Uncategorized")
+                # Safety checks for columns - using schema mapping
+                title = row.get(cols["title"], "Unknown Title")
+                authors = row.get(cols["authors"], "Unknown Author")
+                desc = row.get(cols["description"], "")
+                cats = row.get(cols["categories"], "Uncategorized")
 
                 # Content: The text used for semantic similarity matching
                 content = (
@@ -92,14 +95,12 @@ class ModelTrainer:
                 # Metadata: The data returned when a match is found
                 metadata = {
                     "isbn": str(
-                        row.get("isbn13", "")
-                    ),  # Map isbn13 to isbn for  (unique identifier)
+                        row.get(cols["isbn"], "")
+                    ),  # Map physical column to logical key (unique identifier)
                     "title": str(title),
                     "authors": str(authors),
                     "categories": str(cats),
-                    "description": str(desc)[
-                        :500
-                    ],  # Truncate description in metadata to save space
+                    "description": str(desc)[:500],
                 }
                 documents.append(Document(page_content=content, metadata=metadata))
 

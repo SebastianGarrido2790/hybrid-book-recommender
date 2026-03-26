@@ -16,7 +16,7 @@ import torch
 from tqdm import tqdm
 from transformers import pipeline
 
-from src.entity.config_entity import DataEnrichmentConfig
+from src.entity.config_entity import DataEnrichmentConfig, SchemaConfig
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
@@ -31,10 +31,12 @@ class DataEnrichment:
     Attributes:
         config (DataEnrichmentConfig): Configuration entity containing data paths,
             model name, and batch size for the enrichment process.
+        schema (SchemaConfig): Data contract mapping logical -> physical column names.
     """
 
-    def __init__(self, config: DataEnrichmentConfig):
+    def __init__(self, config: DataEnrichmentConfig, schema: SchemaConfig):
         self.config = config
+        self.schema = schema
 
     def initiate_data_enrichment(self) -> None:
         """
@@ -53,11 +55,14 @@ class DataEnrichment:
             logger.info(f"Loading data from {self.config.data_path}")
             df = pd.read_csv(self.config.data_path)
 
-            # Fill NaNs in descriptions with empty string
-            descriptions = df["description"].fillna("").tolist()
+            cols = self.schema.columns
+            enriched_cols = self.schema.enriched_columns
+
+            # Fill NaNs in descriptions with empty string using schema mapping
+            descriptions = df[cols["description"]].fillna("").tolist()
 
             logger.info(f"Initializing Zero-Shot Classification model: {self.config.model_name}")
-            # Use CPU (-1) as per plan, but if GPU is available it could be used.
+            # Device selection: use GPU if available
             device = 0 if torch.cuda.is_available() else -1
             if device == 0:
                 logger.info("GPU detected, using GPU for classification.")
@@ -84,7 +89,6 @@ class DataEnrichment:
                 # Extract top labels
                 if results:
                     # results can be a single dict (if batch_size=1) or a list of dicts.
-                    # Ensure it's a list for iteration:
                     if isinstance(results, dict):
                         results = [results]
 
@@ -92,7 +96,8 @@ class DataEnrichment:
                         if res and "labels" in res:
                             new_categories.append(str(res["labels"][0]))
 
-            df["simple_category"] = new_categories
+            # Use schema mapping for enriched column name
+            df[enriched_cols["simple_category"]] = new_categories
 
             logger.info(f"Saving enriched data to {self.config.enriched_data_path}")
             df.to_csv(self.config.enriched_data_path, index=False)

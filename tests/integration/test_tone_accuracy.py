@@ -57,6 +57,10 @@ def test_tone_accuracy() -> None:
             return
 
         df = pd.read_csv(data_path)
+        schema = config_manager.get_schema_config()
+        cols = schema.columns
+        enriched_cols = schema.enriched_columns
+
         logger.info(f"Loaded {len(df)} books with tone analysis.")
 
         # Sample random books for manual "Vibe Check"
@@ -69,10 +73,14 @@ def test_tone_accuracy() -> None:
         logger.info(f"{'TITLE':<40} | {'TONE':<10} | {'DESCRIPTION SNIPPET'}")
         logger.info("-" * 80)
 
+        title_col = cols["title"]
+        tone_col = enriched_cols["dominant_tone"]
+        desc_col = cols["description"]
+
         for _, row in sample.iterrows():
-            title = row["title"][:37] + "..." if len(row["title"]) > 37 else row["title"]
-            tone = str(row["dominant_tone"]).upper()
-            desc = str(row["description"])[:60].replace("\n", " ") + "..."
+            title = row[title_col][:37] + "..." if len(str(row[title_col])) > 37 else row[title_col]
+            tone = str(row[tone_col]).upper()
+            desc = str(row[desc_col])[:60].replace("\n", " ") + "..."
 
             logger.info(f"{title:<40} | {tone:<10} | {desc}")
 
@@ -81,7 +89,7 @@ def test_tone_accuracy() -> None:
 
         # 2. Global Tone Distribution Stats
         logger.info("\nGlobal Tone Distribution:")
-        counts = df["dominant_tone"].value_counts()
+        counts = df[tone_col].value_counts()
         logger.info(f"\n{counts}")
 
         # 3. Visualization

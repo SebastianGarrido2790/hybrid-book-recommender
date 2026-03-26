@@ -37,8 +37,9 @@ def main() -> None:
 
         config_manager = ConfigurationManager()
         tone_config = config_manager.get_tone_analysis_config()
+        schema_config = config_manager.get_schema_config()
 
-        analyzer = ToneAnalysis(config=tone_config)
+        analyzer = ToneAnalysis(config=tone_config, schema=schema_config)
         analyzer.initiate_tone_analysis()
 
         logger.info("✅ Tone Analysis Completed Successfully ✅")

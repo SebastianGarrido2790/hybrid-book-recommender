@@ -1,24 +1,41 @@
 """
 Configuration entities for the hybrid book recommender system.
-This module defines dataclass entities to enforce strict type safety and immutability to prevent attribute errors across different stages of the system.
+These models enforce strict type safety and validation at startup to prevent
+runtime attribute errors across pipeline stages.
+All entities use Pydantic for validation, as mandated by the Agentic Architecture Standards.
+
+Fail-Fast Validation: Enforced extra="forbid" across all models, ensuring the pipeline crashes
+immediately at startup if a configuration file contains typos, extra keys, or invalid types,
+preventing silent failures during multi-hour training/enrichment jobs.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field
 
-@dataclass(frozen=True)
-class DataIngestionConfig:
+
+class SchemaConfig(BaseModel):
+    """
+    Configuration mapping for data contracts (Schema).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    columns: dict[str, str] = Field(..., description="Map of logical -> physical column names")
+    target_column: dict[str, str] = Field(..., description="Information about the target column")
+    enriched_columns: dict[str, str] = Field(
+        ..., description="Map of logical -> physical enriched columns"
+    )
+    types: dict[str, str] = Field(..., description="Dictionary of data types for validation")
+
+
+class DataIngestionConfig(BaseModel):
     """
     Configuration for the Data Ingestion stage.
-
-    Attributes:
-        root_dir (Path): Root directory for data ingestion artifacts.
-        source_URL (str): URL to download the source data from.
-        local_data_file (Path): Path where the downloaded zip file will be saved.
-        unzip_dir (Path): Directory where the zip file will be extracted.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     source_URL: str
@@ -26,19 +43,12 @@ class DataIngestionConfig:
     unzip_dir: Path
 
 
-@dataclass(frozen=True)
-class DataValidationConfig:
+class DataValidationConfig(BaseModel):
     """
     Configuration for the Data Validation stage.
-
-    Attributes:
-        root_dir (Path): Root directory for data validation artifacts.
-        unzip_data_dir (Path): Path to the extracted data file from ingestion.
-        STATUS_FILE (Path): Path to the validation status file.
-        cleaned_data_file (Path): Path where the cleaned dataset will be saved.
-        min_desc_len (int): Minimum length of book description to retain.
-        categories_min_len (int): Minimum length of categories string to retain.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     unzip_data_dir: Path
@@ -48,19 +58,12 @@ class DataValidationConfig:
     categories_min_len: int
 
 
-@dataclass(frozen=True)
-class DataTransformationConfig:
+class DataTransformationConfig(BaseModel):
     """
     Configuration for the Data Transformation stage.
-
-    Attributes:
-        root_dir (Path): Root directory for data transformation artifacts.
-        data_path (Path): Path to the cleaned data file.
-        test_size (float): Proportion of the dataset to include in the test split.
-        val_size (float): Proportion of the remaining dataset to include in the validation split.
-        random_state (int): Random seed for reproducibility.
-        tokenizer_name (str, optional): Name of the tokenizer to use (if applicable).
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     data_path: Path
@@ -70,19 +73,12 @@ class DataTransformationConfig:
     tokenizer_name: str | None = None
 
 
-@dataclass(frozen=True)
-class DataEnrichmentConfig:
+class DataEnrichmentConfig(BaseModel):
     """
     Configuration for the Data Enrichment (Zero-Shot) stage.
-
-    Attributes:
-        root_dir (Path): Root directory for data enrichment artifacts.
-        data_path (Path): Path to the cleaned data file.
-        enriched_data_path (Path): Path where the enriched data will be saved.
-        model_name (str): Name of the zero-shot classification model.
-        candidate_labels (list[str]): List of target categories for classification.
-        batch_size (int): Number of descriptions to classify in each batch.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     data_path: Path
@@ -92,19 +88,12 @@ class DataEnrichmentConfig:
     batch_size: int
 
 
-@dataclass(frozen=True)
-class ToneAnalysisConfig:
+class ToneAnalysisConfig(BaseModel):
     """
     Configuration for the Tone Analysis (Sentiment) stage.
-
-    Attributes:
-        root_dir (Path): Root directory for tone analysis artifacts.
-        data_path (Path): Path to the enriched data file.
-        output_path (Path): Path where the toned data will be saved.
-        model_name (str): Name of the sentiment analysis model.
-        target_emotions (list[str]): List of target emotions for classification.
-        batch_size (int): Number of descriptions to analyze in each batch.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     data_path: Path
@@ -112,22 +101,17 @@ class ToneAnalysisConfig:
     model_name: str
     target_emotions: list[str]
     batch_size: int
+    min_sentence_len: int
+    max_sentences_per_book: int
+    detection_threshold: float
 
 
-@dataclass(frozen=True)
-class ModelTrainerConfig:
+class ModelTrainerConfig(BaseModel):
     """
     Configuration for the Model Training (Vector DB) stage.
-
-    Attributes:
-        root_dir (Path): Root directory for model artifacts.
-        data_path (Path): Path to the training data.
-        db_path (Path): Path where the ChromaDB will be persisted.
-        model_name (str): Name of the sentence-transformer model.
-        collection_name (str): Name of the ChromaDB collection.
-        embedding_provider (str): Provider of the embedding model (huggingface or gemini).
-        batch_size (int): Number of documents to process in each batch.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     data_path: Path
@@ -138,21 +122,12 @@ class ModelTrainerConfig:
     batch_size: int
 
 
-@dataclass(frozen=True)
-class InferenceConfig:
+class InferenceConfig(BaseModel):
     """
     Configuration for the Inference Stage (Hybrid Recommender).
-
-    Attributes:
-        model_name (str): Name of the sentence-transformer model.
-        embedding_provider (str): Provider of the embedding model (huggingface or gemini).
-        chroma_db_dir (Path): Path to the ChromaDB directory.
-        data_path (Path): Path to the data file (enriched or clean).
-        collection_name (str): Name of the ChromaDB collection.
-        top_k (int): Number of top recommendations to return.
-        popularity_weight (float): Weight for the rating boost in hybrid score.
-        search_buffer_multiplier (int): Multiplier for initial search validation.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     model_name: str
     embedding_provider: str
@@ -162,34 +137,26 @@ class InferenceConfig:
     top_k: int
     popularity_weight: float
     search_buffer_multiplier: int
+    filtered_search_boost: int
 
 
-@dataclass(frozen=True)
-class BatchPredictionConfig:
+class BatchPredictionConfig(BaseModel):
     """
     Configuration for the Batch Prediction stage.
-
-    Attributes:
-        root_dir (Path): Root directory for prediction artifacts.
-        results_file (Path): Path to save the prediction results.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     root_dir: Path
     results_file: Path
 
 
-@dataclass(frozen=True)
-class ModelEvaluationConfig:
+class ModelEvaluationConfig(BaseModel):
     """
     Configuration for the Model Evaluation stage (MLflow tracking).
-
-    Attributes:
-        root_dir (Path): Root directory for evaluation artifacts.
-        data_path (Path): Path to the validation/test data.
-        model_path (Path): Path to the persisted model/VectorDB.
-        all_params (dict[str, Any]): All parameters to be logged to MLflow.
-        mlflow_uri (str): URI for the MLflow tracking server.
     """
+
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     root_dir: Path
     data_path: Path

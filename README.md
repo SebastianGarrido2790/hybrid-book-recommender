@@ -153,6 +153,9 @@ The **AI Book Assistant** tab is powered by a `pydantic-ai` ReAct agent followin
 | 💪 **Brawn** | `HybridRecommender` | Executes deterministic vector search + scoring — never touched by the LLM |
 
 **How it works:**
+
+Refer to [**Agentic Layer Implementation**](reports/docs/workflows/agentic_layer_implementation.md) for the full implementation details.
+
 1. User sends: *"I want a dark thriller set in a small town"*
 2. Agent extracts intent → calls `search_books(query=..., tone="Suspenseful")`
 3. `HybridRecommender` queries ChromaDB + applies hybrid scoring
@@ -176,7 +179,7 @@ To replicate the exact results:
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See [`LICENSE.txt`](LICENSE.txt) for more information.
 
 ---
 *Built with ❤️ by Sebastian Garrido for the Advanced Agentic Coding Portfolio.*

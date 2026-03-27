@@ -1,4 +1,4 @@
-# Phase 5: Cloud Deployment Architecture
+# Cloud Deployment Runbook
 
 ## 1. Executive Summary
 This document outlines the **Cloud Deployment Strategy** for the *Hybrid Book Recommender*. While the project is currently running in a local verification environment, the architecture is fully designed for **Continuous Deployment (CD)** to AWS EC2. The code is fully written and tested locally; to go live, you just need to add the API secrets.

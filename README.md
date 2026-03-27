@@ -24,6 +24,10 @@ The **Semantic Search** tab allows you to search for books by title, author, or 
 
 The **AI Book Assistant** accepts natural language like *"I want a dark thriller set in a small town"* and returns curated, conversational recommendations with follow-up suggestions to refine your taste.
 
+>[!NOTE]
+>The Agentic Layer enhances the system by adding a conversational AI agent that can reason about user preferences and orchestrate searches in natural language. It resolves the limitation of the static search UI by adding intent disambiguation, multi-turn refinement, and contextual synthesis. 
+>For more information, see the [**Agentic Layer Enhancement**](reports/docs/evaluations/agentic_layer_enhancement.md).
+
 ---
 
 ## 🚀 Key Features

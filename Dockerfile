@@ -10,9 +10,11 @@ WORKDIR /app
 # Install system dependencies (e.g., for build tools if needed by dependencies)
 # RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
 
-# Copy configuration files to install dependencies 
-# Doing this first allows caching the dependency layer
-COPY pyproject.toml uv.lock ./
+# Copy project metadata files needed by hatchling to resolve the package.
+# README.md must be included because pyproject.toml declares `readme = "README.md"`;
+# hatchling validates this field during `uv sync --frozen` (editable install).
+# Copying these together before `COPY . .` preserves optimal layer caching.
+COPY pyproject.toml uv.lock README.md ./
 
 # Install dependencies into the system or a virtual environment
 # --frozen ensures we use exact versions from uv.lock

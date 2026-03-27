@@ -18,7 +18,9 @@ Two powerful interfaces, one system.
 
 | 🔍 Semantic Search Tab | 🤖 AI Book Assistant Tab |
 | :---: | :---: |
-| ![Dashboard](reports/figures/gradio_app_ui_01.png) | ![AI Assistant](reports/figures/gradio_ai_book_assistant_tap.png) |
+| ![Dashboard](reports/figures/gradio_search_tap_01.png) | ![AI Assistant](reports/figures/gradio_ai_book_assistant_tap.png) |
+
+The **Semantic Search** tab allows you to search for books by title, author, or keywords. It returns a list of books that match your query, ranked by relevance.
 
 The **AI Book Assistant** accepts natural language like *"I want a dark thriller set in a small town"* and returns curated, conversational recommendations with follow-up suggestions to refine your taste.
 

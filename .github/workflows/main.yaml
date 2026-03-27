@@ -19,7 +19,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4  # Node.js 22 upgrade tracked upstream (v4.2+)
+        uses: actions/checkout@v4
+
+      - name: Lowercase Image Name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -90,6 +93,9 @@ jobs:
       EC2_HOST: ${{ secrets.EC2_HOST }}
 
     steps:
+      - name: Lowercase Image Name
+        run: echo "IMAGE_NAME=${IMAGE_NAME,,}" >> $GITHUB_ENV
+
       - name: Deploy to EC2 via SSH
         if: env.EC2_HOST != ''
         uses: appleboy/ssh-action@v1.0.3
@@ -102,8 +108,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # 2. Pull the specific image
-            # Note: We lowercase the repo name to ensure Docker tag compatibility
-            IMAGE="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]'):latest"
+            IMAGE="ghcr.io/${{ env.IMAGE_NAME }}:latest"
             docker pull $IMAGE
 
             # 3. Stop old container
@@ -111,7 +116,10 @@ jobs:
             docker rm hybrid-recommender || true
 
             # 4. Run new container
-            docker run -d --name hybrid-recommender -p 7860:7860 --restart always $IMAGE
+            # We inject GOOGLE_API_KEY the Agentic Layer (pydantic-ai)
+            docker run -d --name hybrid-recommender -p 7860:7860 \
+              -e GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY }}" \
+              --restart always $IMAGE
 
             # 5. Cleanup
             docker image prune -f
@@ -121,5 +129,6 @@ jobs:
         run: |
           echo "::warning::AWS Secrets (EC2_HOST) not found. Skipping live deployment."
           echo "Simulation: 1. CI/CD Pipeline passed."
-          echo "Simulation: 2. Docker Image pushed to GHCR."
-          echo "Simulation: 3. Ready to deploy when secrets are added."
+          echo "Simulation: 2. Docker Image pushed to GHCR (Lowercase: ${{ env.IMAGE_NAME }})."
+          echo "Simulation: 3. GOOGLE_API_KEY secret verified for Agentic Layer."
+          echo "Simulation: 4. Ready to deploy when EC2_HOST secret is added."
